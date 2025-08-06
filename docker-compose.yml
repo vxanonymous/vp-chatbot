@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=vacation_chatbot
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://admin:password@mongodb:27017/vacation_chatbot?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-jwt-key}
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api/v1
+
+volumes:
+  mongo_data:
+  redis_data:

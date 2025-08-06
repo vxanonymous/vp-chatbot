@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vacation-chatbot-backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - MONGODB_URL=${MONGODB_URL}
+      - DEBUG=false
+      - LOG_LEVEL=WARNING
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    volumes:
+      - backend-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vacation-chatbot-frontend
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: vacation-chatbot-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=vacation_chatbot
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy (Optional - for SSL termination)
+  nginx:
+    image: nginx:alpine
+    container_name: vacation-chatbot-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+    profiles:
+      - production
+
+  # Redis Cache (Optional - for session storage)
+  redis:
+    image: redis:7-alpine
+    container_name: vacation-chatbot-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - production
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local
+  mongodb-config:
+    driver: local
+  backend-logs:
+    driver: local
+  redis-data:
+    driver: local 

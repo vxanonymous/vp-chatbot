@@ -1,0 +1,1 @@
+# Core module for the vacation planning chatbot application 
