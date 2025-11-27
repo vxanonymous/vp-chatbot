@@ -1,8 +1,7 @@
 import logging
-from passlib.context import CryptContext
+import bcrypt
 
 logger = logging.getLogger(__name__)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def _truncate_password(password: str) -> str:
     # Truncate password to 72 bytes (bcrypt limit)
@@ -34,18 +33,20 @@ def _truncate_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     # Verify a plain text password against its hash
     truncated_password = _truncate_password(plain_password)
-    return pwd_context.verify(truncated_password, hashed_password)
+    password_bytes = truncated_password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    return bcrypt.checkpw(password_bytes, hashed_password.encode('utf-8'))
 
 def get_password_hash(password: str) -> str:
     # Generate a secure hash for a password.
     # Uses bcrypt for secure password hashing.
     truncated_password = _truncate_password(password)
+    password_bytes = truncated_password.encode('utf-8')
     
-    try:
-        return pwd_context.hash(truncated_password)
-    except ValueError as e:
-        if "72 bytes" in str(e) or "longer than 72" in str(e).lower():
-            logger.error(f"Bcrypt error: {e}. Password length: {len(truncated_password.encode('utf-8'))} bytes")
-            emergency_pwd = truncated_password[:9]
-            return pwd_context.hash(emergency_pwd)
-        raise
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
