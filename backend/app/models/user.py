@@ -11,7 +11,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     # Model for user registration requests.
-    password: str = Field(..., min_length=8, max_length=100, description="User password")
+    password: str = Field(..., min_length=8, max_length=72, description="User password")
 
 class UserLogin(BaseModel):
     # Model for user login requests.
