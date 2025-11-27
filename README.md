@@ -4,6 +4,10 @@ Full-stack application for vacation planning through AI-powered conversations. B
 
 **Created by Vinh Nguyen**
 
+## Demo
+
+The app is hosted on **[https://vp-chatbot.surge.sh](https://vp-chatbot.surge.sh)**
+
 ## Project Structure
 
 ```
