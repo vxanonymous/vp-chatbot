@@ -3,27 +3,14 @@ from pydantic_settings import BaseSettings
 from pydantic import field_validator
 from functools import lru_cache
 
-"""
-Application Configuration for Vacation Planning Chatbot
-
-This module manages all application settings, environment variables, and configuration
-for the backend API. It provides validation and caching for optimal performance.
-"""
-
 
 class Settings(BaseSettings):
-    """
-    Application settings and configuration management.
-    
-    Handles environment variables, database settings, API keys, and security
-    configurations with validation for production environments.
-    """
     
     # Environment settings for deployment configuration
     environment: str = "development"
     
-    # Application metadata for vacation planning chatbot
-    app_name: str = "Vacation Planning Chatbot"
+    # Application metadata for vacation planning system
+    app_name: str = "Vacation Planning System"
     app_version: str = "1.0.0"
     debug: bool = False
     
@@ -34,16 +21,18 @@ class Settings(BaseSettings):
     
     # Database configuration for storing conversations and user data
     mongodb_url: str = "mongodb://localhost:27017"
-    mongodb_database: str = "vacation_chatbot"
+    mongodb_database: str = "vacation_planning_system"
     mongodb_ssl_verify: bool = True
     mongodb_ssl: bool = False
     
-    # OpenAI API settings for AI-powered vacation planning responses
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
-    openai_temperature: float = 0.7
-    openai_max_tokens: int = 1000
-    openai_timeout: int = 30
+    # OpenRouter API settings for AI-powered vacation planning responses
+    # OpenRouter provides access to multiple AI models through a unified API
+    openrouter_api_key: str = ""
+    openrouter_model: str = "x-ai/grok-4.1-fast"
+    openrouter_temperature: float = 0.7
+    openrouter_max_tokens: int = 8000
+    openrouter_timeout: int = 120
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
     
     # CORS and security
     cors_origins: list = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
@@ -62,8 +51,8 @@ class Settings(BaseSettings):
     # Performance and limits for chat conversations
     max_conversation_messages: int = 100
     max_message_length: int = 10000
-    request_timeout: int = 30
-    response_timeout: int = 25
+    request_timeout: int = 120
+    response_timeout: int = 100
     
     # Development settings
     development_mode: bool = False
@@ -73,18 +62,18 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379"
     
     # MongoDB Configuration
-    mongodb_db_name: str = "vacation_chatbot"
+    mongodb_db_name: str = "vacation_planning_system"
     
-    # JWT Configuration
-    jwt_secret_key: str
+    # JWT configuration
+    jwt_secret_key: str = "your-super-secret-jwt-key-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 43200  # 30 days
     
-    # API Configuration
+    # API configuration
     api_version: str = "v1"
-    api_title: str = "Vacation Planning Chatbot API"
+    api_title: str = "Vacation Planning System API"
     
-    # Conversation Configuration for chat history management
+    # Conversation configuration for chat history management
     max_conversation_length: int = 50
     conversation_ttl: int = 3600  # 1 hour in seconds
     
@@ -93,25 +82,38 @@ class Settings(BaseSettings):
     
     @field_validator("secret_key")
     @classmethod
+    # Only validate in production environment
+
     def validate_secret_key(cls, v):
-        # Only validate in production environment
         if (v == "your-secret-key-change-in-production" and 
             os.getenv("ENVIRONMENT", "development").lower() == "production"):
             raise ValueError("SECRET_KEY must be set in production")
         return v
     
-    @field_validator("openai_api_key")
+    @field_validator("openrouter_api_key")
     @classmethod
-    def validate_openai_key(cls, v):
-        # Allow empty API key in development for testing
+    # Validate OpenRouter API key in production
+
+    def validate_openrouter_key(cls, v):
         if not v and os.getenv("ENVIRONMENT", "development").lower() == "production":
-            raise ValueError("OPENAI_API_KEY must be set in production")
+            raise ValueError("OPENROUTER_API_KEY must be set in production")
+        return v
+    
+    @field_validator("jwt_secret_key")
+    @classmethod
+    # Only validate in production environment
+
+    def validate_jwt_secret_key(cls, v):
+        if (v == "your-super-secret-jwt-key-change-in-production" and 
+            os.getenv("ENVIRONMENT", "development").lower() == "production"):
+            raise ValueError("JWT_SECRET_KEY must be set in production")
         return v
     
     @field_validator("mongodb_url")
     @classmethod
     def validate_mongodb_url(cls, v):
         if not v:
+
             raise ValueError("MONGODB_URL must be set")
         return v
     
@@ -120,45 +122,32 @@ class Settings(BaseSettings):
         "case_sensitive": False
     }
 
-
 @lru_cache()
 def get_settings() -> Settings:
-    """Get cached settings instance."""
+    # Get cached settings instance
     return Settings()
 
-
-# Global settings instance
-settings = get_settings()
-
-
-# Environment-specific configurations
-def is_production() -> bool:
-    """Check if running in production environment."""
-    return os.getenv("ENVIRONMENT", "development").lower() == "production"
-
-
 def is_development() -> bool:
-    """Check if running in development environment."""
+    # Check if running in development environment
     return os.getenv("ENVIRONMENT", "development").lower() == "development"
 
-
 def get_cors_origins() -> list:
-    """Get CORS origins based on environment."""
+    # Get CORS origins based on environment
     if is_production():
-        # Add your production domain here
         return ["https://yourdomain.com"]
+    settings = get_settings()
     return settings.cors_origins
 
-
 def get_log_level() -> str:
-    """Get log level based on environment."""
+    # Get log level based on environment
     if is_development():
         return "DEBUG"
+    settings = get_settings()
     return settings.log_level
 
-
 def get_mongodb_config() -> dict:
-    """Get MongoDB configuration based on environment."""
+    # Get MongoDB configuration based on environment
+    settings = get_settings()
     config = {
         "url": settings.mongodb_url,
         "database": settings.mongodb_database,
@@ -166,7 +155,6 @@ def get_mongodb_config() -> dict:
     }
     
     if is_production():
-        # Production-specific MongoDB settings
         config.update({
             "ssl_verify": True,
             "retry_writes": True,

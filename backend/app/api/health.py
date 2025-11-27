@@ -9,25 +9,20 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health")
 async def health_check():
-    """
-    Comprehensive health check endpoint.
-    
-    Verifies database connectivity and returns detailed service status
-    for monitoring and debugging purposes.
-    """
+    # Comprehensive health check endpoint.
+    # for monitoring and debugging purposes.
     try:
-        # Verify database connection for vacation chatbot data
+        # Verify database connection for vacation planning system data
         db = get_database()
         if db is None:
             return {
                 "status": "unhealthy",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "service": "vacation-planning-chatbot",
+                "service": "vacation-planning-system",
                 "database": "disconnected",
                 "error": "Database connection failed - unable to access conversation data"
             }
         
-        # Test database connectivity to ensure vacation chatbot can store conversations
         try:
             await db.client.server_info()
             db_status = "connected"
@@ -38,7 +33,7 @@ async def health_check():
         return {
             "status": "healthy" if db_status == "connected" else "unhealthy",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "service": "vacation-planning-chatbot",
+                "service": "vacation-planning-system",
             "database": db_status,
             "version": "1.0.0"
         }
@@ -47,16 +42,16 @@ async def health_check():
         return {
             "status": "unhealthy",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "service": "vacation-planning-chatbot",
+                "service": "vacation-planning-system",
             "error": str(e)
         }
 
 
 @router.get("/")
 async def root():
-    """API root endpoint with service information."""
+    # API root endpoint with service information.
     return {
-        "message": "Vacation Planning Chatbot API",
+        "message": "Vacation Planning System API",
         "version": "1.0.0",
         "endpoints": {
             "chat": "/api/v1/chat",

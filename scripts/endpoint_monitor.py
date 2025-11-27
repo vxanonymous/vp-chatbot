@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""
-Endpoint Performance Monitor
-Monitors API endpoints and database queries for performance issues.
-"""
+# Endpoint Performance Monitor
+# Monitors API endpoints and database queries for performance issues.
 
 import asyncio
 import aiohttp
@@ -22,7 +20,7 @@ from collections import defaultdict
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class EndpointMonitor:
-    """Monitors endpoint performance and identifies bottlenecks."""
+    # Monitors endpoint performance and identifies bottlenecks.
     
     def __init__(self, base_url: str = "http://localhost:8000"):
         self.base_url = base_url
@@ -36,12 +34,12 @@ class EndpointMonitor:
             "/api/v1/users/profile"
         ]
         self.results = defaultdict(list)
-        self.slow_threshold = 1.0  # 1 second
-        self.critical_threshold = 5.0  # 5 seconds
+        self.slow_threshold = 1.0
+        self.critical_threshold = 5.0
         
     async def test_endpoint(self, endpoint: str, method: str = "GET", 
                           data: Optional[Dict] = None, headers: Optional[Dict] = None) -> Dict[str, Any]:
-        """Test a single endpoint and measure performance."""
+        # Test a single endpoint and measure performance.
         url = f"{self.base_url}{endpoint}"
         start_time = time.time()
         
@@ -83,7 +81,7 @@ class EndpointMonitor:
     
     async def load_test_endpoint(self, endpoint: str, num_requests: int = 10, 
                                concurrent: int = 5) -> Dict[str, Any]:
-        """Load test a specific endpoint."""
+        # Load test a specific endpoint.
         print(f"🔍 Load testing {endpoint} with {num_requests} requests ({concurrent} concurrent)")
         
         semaphore = asyncio.Semaphore(concurrent)
@@ -94,8 +92,7 @@ class EndpointMonitor:
         
         tasks = [make_request() for _ in range(num_requests)]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        # Filter out exceptions
+
         valid_results = [r for r in results if not isinstance(r, Exception)]
         
         if not valid_results:
@@ -122,7 +119,7 @@ class EndpointMonitor:
         }
     
     async def monitor_all_endpoints(self, duration: int = 300, interval: int = 30) -> Dict[str, Any]:
-        """Monitor all endpoints continuously."""
+        # Monitor all endpoints continuously.
         print(f"🔍 Starting continuous monitoring for {duration} seconds (interval: {interval}s)")
         
         start_time = time.time()
@@ -133,13 +130,12 @@ class EndpointMonitor:
             
             for endpoint in self.endpoints:
                 if "{id}" in endpoint:
-                    # Skip dynamic endpoints for now
+
                     continue
                 
                 result = await self.test_endpoint(endpoint)
                 monitoring_results[endpoint].append(result)
-                
-                # Alert for slow responses
+
                 if result["response_time"] > self.critical_threshold:
                     print(f"🚨 CRITICAL: {endpoint} took {result['response_time']:.2f}s")
                 elif result["response_time"] > self.slow_threshold:
@@ -150,7 +146,7 @@ class EndpointMonitor:
         return dict(monitoring_results)
     
     def analyze_performance(self, results: Dict[str, List[Dict]]) -> Dict[str, Any]:
-        """Analyze performance data and identify issues."""
+        # Analyze performance data and identify issues.
         analysis = {
             "slow_endpoints": [],
             "unreliable_endpoints": [],
@@ -177,8 +173,7 @@ class EndpointMonitor:
                     "success_rate": success_rate * 100,
                     "total_requests": len(endpoint_results)
                 }
-                
-                # Identify slow endpoints
+
                 if avg_time > self.slow_threshold:
                     analysis["slow_endpoints"].append({
                         "endpoint": endpoint,
@@ -186,16 +181,14 @@ class EndpointMonitor:
                         "max_response_time": max_time,
                         "p95_response_time": p95_time
                     })
-                
-                # Identify unreliable endpoints
+
                 if success_rate < 0.95:
                     analysis["unreliable_endpoints"].append({
                         "endpoint": endpoint,
                         "success_rate": success_rate * 100,
                         "avg_response_time": avg_time
                     })
-        
-        # Generate recommendations
+
         if analysis["slow_endpoints"]:
             analysis["recommendations"].append("• Implement caching for slow endpoints")
             analysis["recommendations"].append("• Optimize database queries")
@@ -209,7 +202,7 @@ class EndpointMonitor:
         return analysis
     
     def generate_report(self, analysis: Dict[str, Any]) -> str:
-        """Generate a performance report."""
+        # Generate a performance report.
         report = f"""
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                        ENDPOINT PERFORMANCE REPORT                          ║
@@ -269,7 +262,7 @@ class EndpointMonitor:
         return report
     
     def save_results(self, results: Dict[str, Any], filename: str = "endpoint_monitoring.json"):
-        """Save monitoring results to file."""
+        # Save monitoring results to file.
         data = {
             "timestamp": datetime.now().isoformat(),
             "base_url": self.base_url,
@@ -281,9 +274,8 @@ class EndpointMonitor:
         
         print(f"Results saved to {filename}")
 
-
 async def main():
-    """Main function."""
+    # Main function.
     parser = argparse.ArgumentParser(description="Endpoint Performance Monitor")
     parser.add_argument("--url", default="http://localhost:8000", help="Base URL to monitor")
     parser.add_argument("--duration", type=int, default=300, help="Monitoring duration in seconds")
@@ -298,17 +290,16 @@ async def main():
     monitor = EndpointMonitor(args.url)
     
     if args.load_test:
-        # Load test specific endpoint
+
         result = await monitor.load_test_endpoint(args.load_test, args.requests, args.concurrent)
         print(json.dumps(result, indent=2))
     else:
-        # Continuous monitoring
+
         results = await monitor.monitor_all_endpoints(args.duration, args.interval)
         analysis = monitor.analyze_performance(results)
         report = monitor.generate_report(analysis)
         print(report)
         monitor.save_results(results, args.output)
-
 
 if __name__ == "__main__":
     asyncio.run(main()) 

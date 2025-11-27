@@ -1,1 +1,1 @@
-# Core module for the vacation planning chatbot application 
+# Core module for the vacation planning system application 

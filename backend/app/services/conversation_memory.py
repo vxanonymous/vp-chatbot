@@ -6,12 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 class ConversationMemory:
-    """
-    Manages conversation context and memory for the chatbot.
-    
-    This class handles both short-term conversation context and long-term
-    user preferences to provide more personalized and contextual responses.
-    """
     
     def __init__(self):
         # Keep track of what users are talking about right now
@@ -20,18 +14,15 @@ class ConversationMemory:
         self.long_term_memory = {}
         
     def update_context(self, conversation_id: str, key: str, value: Any):
-        """Update what we remember about this conversation."""
+        # Update what we remember about this conversation.
         if conversation_id not in self.short_term_memory:
             self.short_term_memory[conversation_id] = {}
 
     def store_context(self, conversation_id: str, context: Any, insights: dict = None) -> bool:
-        """
-        Remember what the user said so we can keep the conversation flowing naturally.
-        
-        We handle different types of information (like destinations, budgets, dates) 
-        and keep track of how often things are mentioned so we can give better 
-        travel suggestions that feel personalized.
-        """
+        # Remember what the user said so we can keep the conversation flowing naturally.
+        # We handle different types of information (like destinations, budgets, dates)
+        # and keep track of how often things are mentioned so we can give better
+        # travel suggestions that feel personalized.
         # Set up memory for this conversation if it's new
         if conversation_id not in self.short_term_memory:
             self.short_term_memory[conversation_id] = {}
@@ -72,7 +63,7 @@ class ConversationMemory:
         return True
     
     def get_context(self, conversation_id: str) -> Dict:
-        """Get what we remember about this conversation, focusing on the most important stuff."""
+        # Get what we remember about this conversation, focusing on the most relevant information
         if conversation_id not in self.short_term_memory:
             return {}
         
@@ -80,7 +71,7 @@ class ConversationMemory:
         current_time = datetime.now(timezone.utc)
         
         for key, data in self.short_term_memory[conversation_id].items():
-            # Figure out how important this information still is
+            # Calculate relevance score for this information
             time_diff = (current_time - data["timestamp"]).seconds
             recency_score = max(0, 1 - (time_diff / 3600))  # Less important as time passes
             frequency_score = min(1, data["mentioned_count"] / 5)  # More important if mentioned often
@@ -96,7 +87,7 @@ class ConversationMemory:
         return context
     
     def extract_key_points(self, messages: List[Dict]) -> Dict:
-        """Pick out the important stuff from what the user said about their vacation."""
+        # Extract key information from user messages about their vacation
         key_points = {
             "destinations": [],
             "requirements": [],
@@ -199,7 +190,7 @@ class ConversationMemory:
                             if actual_dest not in key_points["destinations"]:
                                 key_points["destinations"].append(actual_dest)
                 
-                # Look for things they said they need or must have
+                # Look for things they said they need or require
                 if any(word in content for word in ["need", "must", "require", "important"]):
                     key_points["requirements"].append(msg["content"])
                 
@@ -218,13 +209,13 @@ class ConversationMemory:
         return key_points
     
     def clear_context(self, conversation_id: str):
-        """Forget everything about this specific conversation."""
+        # Forget everything about this specific conversation.
         if conversation_id in self.short_term_memory:
             # Wipe out all memories of this chat
             del self.short_term_memory[conversation_id]
     
     def cleanup_old_contexts(self, max_age_hours: int = 24):
-        """Clean up old conversation memories to keep things tidy."""
+        # Clean up old conversation memories to keep things tidy.
         current_time = datetime.now(timezone.utc)
         cutoff_time = current_time - timedelta(hours=max_age_hours)
         

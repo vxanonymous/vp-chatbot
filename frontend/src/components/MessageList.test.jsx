@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import MessageList from './MessageList';
 
 describe('MessageList', () => {
+
   const mockMessages = [
     {
       id: '1',
@@ -20,6 +21,7 @@ describe('MessageList', () => {
   ];
 
   it('renders messages correctly', () => {
+
     render(<MessageList messages={mockMessages} isLoading={false} />);
     
     expect(screen.getByText('Hello, how can I help you plan your vacation?')).toBeInTheDocument();
@@ -27,12 +29,14 @@ describe('MessageList', () => {
   });
 
   it('renders loading state when isLoading is true', () => {
+
     render(<MessageList messages={[]} isLoading={true} />);
     
     expect(screen.getByText('Planning your perfect vacation...')).toBeInTheDocument();
   });
 
   it('renders empty state when no messages', () => {
+
     render(<MessageList messages={[]} isLoading={false} />);
     
     const messageList = screen.getByTestId('message-list');
@@ -40,19 +44,21 @@ describe('MessageList', () => {
   });
 
   it('renders user and assistant messages with correct styling', () => {
+
     render(<MessageList messages={mockMessages} isLoading={false} />);
     
     const assistantMessage = screen.getByText('Hello, how can I help you plan your vacation?');
     const userMessage = screen.getByText('I want to go to Paris');
     
-    // The assistant message content is wrapped in RichMessage component
-    // Find the parent div that contains the actual message styling
+
+
     const messageContainer = assistantMessage.closest('div').parentElement;
     expect(messageContainer).toHaveClass('bg-gray-100', 'text-gray-800');
     expect(userMessage.closest('div')).toHaveClass('bg-primary-600');
   });
 
   it('renders error messages with error styling', () => {
+
     const errorMessages = [
       {
         id: '1',
@@ -70,6 +76,7 @@ describe('MessageList', () => {
   });
 
   it('renders messages with confidence scores', () => {
+
     const messagesWithConfidence = [
       {
         id: '1',
@@ -86,6 +93,7 @@ describe('MessageList', () => {
   });
 
   it('handles markdown content correctly', () => {
+
     const markdownMessage = [
       {
         id: '1',
@@ -102,6 +110,7 @@ describe('MessageList', () => {
   });
 
   it('handles special characters in messages', () => {
+
     const specialCharMessage = [
       {
         id: '1',
@@ -117,6 +126,7 @@ describe('MessageList', () => {
   });
 
   it('handles very long messages', () => {
+
     const longMessage = [
       {
         id: '1',
@@ -132,6 +142,7 @@ describe('MessageList', () => {
   });
 
   it('handles messages with missing properties gracefully', () => {
+
     const incompleteMessages = [
       {
         id: '1',
@@ -143,12 +154,12 @@ describe('MessageList', () => {
         id: '2',
         role: 'user',
         timestamp: Date.now(),
-      }, // missing content
+      },
       {
         content: 'No ID',
         role: 'assistant',
         timestamp: Date.now(),
-      }, // missing id
+      },
     ];
 
     render(<MessageList messages={incompleteMessages} isLoading={false} />);
@@ -157,6 +168,7 @@ describe('MessageList', () => {
   });
 
   it('renders user and assistant avatars correctly', () => {
+
     render(<MessageList messages={mockMessages} isLoading={false} />);
     
     const avatars = screen.getAllByText(/✈️|👤/);
@@ -164,13 +176,14 @@ describe('MessageList', () => {
   });
 
   it('applies dark mode classes correctly', () => {
+
     render(<MessageList messages={mockMessages} isLoading={false} />);
     
     const assistantMessage = screen.getByText('Hello, how can I help you plan your vacation?');
     const userMessage = screen.getByText('I want to go to Paris');
     
-    // The assistant message content is wrapped in RichMessage component
-    // Find the parent div that contains the actual message styling
+
+
     const messageContainer = assistantMessage.closest('div').parentElement;
     expect(messageContainer).toHaveClass('dark:bg-gray-800', 'dark:text-gray-100');
     expect(userMessage.closest('div')).toHaveClass('dark:bg-primary-700', 'dark:text-white');

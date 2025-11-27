@@ -3,7 +3,7 @@
 # NOTE: This script is designed for macOS systems only.
 # For other operating systems, please adapt the commands accordingly.
 
-echo "Starting Vacation Planning Chatbot Frontend..."
+echo "Starting Vacation Planning System Frontend..."
 echo
 
 cd frontend

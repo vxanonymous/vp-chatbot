@@ -1,17 +1,9 @@
-"""
-Tests for the modularity improvements including:
-- Dependency Injection Container
-- Service Interfaces
-- Configuration Management
-- Service Isolation
-- Testability Improvements
-"""
-import pytest  # 
+import pytest
 import asyncio
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from bson import ObjectId  # 
+from bson import ObjectId
 
-from app.core.container import ServiceContainer, get_container, get_user_service, get_conversation_service
+from app.core.container import ServiceContainer, get_container
 from app.core.config_manager import ConfigManager, get_config_manager, get_config
 from app.services.user_service import UserService
 from app.services.conversation_service import ConversationService
@@ -57,33 +49,29 @@ class MockServiceContainer:
 
 @pytest.fixture
 def mock_db():
-    """Provide a mock database for testing."""
+# Provide a mock database for testing.
     return MockDatabase()
 
 
 @pytest.fixture
 def test_container():
-    """Provide a test container with mocked dependencies."""
+# Provide a test container with mocked dependencies.
     return MockServiceContainer()
 
 
 class TestDependencyInjectionContainer:
-    """Test the dependency injection container functionality."""
     
     def test_container_creation(self):
-        """Test that the container can be created."""
         container = ServiceContainer()
         assert container is not None
         assert isinstance(container, ServiceContainer)
     
     def test_container_singleton_pattern(self):
-        """Test that get_container returns the same instance."""
         container1 = get_container()
         container2 = get_container()
         assert container1 is container2
     
     def test_user_service_lazy_loading(self, mock_db):
-        """Test that user service is created lazily."""
         with patch('app.core.container.get_database', return_value=mock_db):
             container = ServiceContainer()
             
@@ -100,7 +88,6 @@ class TestDependencyInjectionContainer:
             assert service is service2
     
     def test_conversation_service_lazy_loading(self, mock_db):
-        """Test that conversation service is created lazily."""
         with patch('app.core.container.get_database', return_value=mock_db):
             container = ServiceContainer()
             
@@ -117,7 +104,6 @@ class TestDependencyInjectionContainer:
             assert service is service2
     
     def test_openai_service_lazy_loading(self):
-        """Test that OpenAI service is created lazily."""
         container = ServiceContainer()
         
         # Service should not exist initially
@@ -133,7 +119,6 @@ class TestDependencyInjectionContainer:
         assert service is service2
     
     def test_container_reset(self, mock_db):
-        """Test that container reset clears all services."""
         with patch('app.core.container.get_database', return_value=mock_db):
             container = ServiceContainer()
             
@@ -155,32 +140,21 @@ class TestDependencyInjectionContainer:
             assert container._conversation_service is None
             assert container._openai_service is None
 
-    def test_convenience_functions(self, mock_db):
-        """Test convenience functions for getting services."""
-        # Clear the LRU cache to ensure fresh instances
-        get_user_service.cache_clear()
-        get_conversation_service.cache_clear()
-        
+    def test_container_service_access(self, mock_db):
         # Reset the container to ensure fresh instances
         container = get_container()
         container.reset()
         
-        # Temporarily disable the global mock for this test
         with patch('app.core.container.get_database', return_value=mock_db):
-            with patch('app.core.container.get_container', return_value=container):
-                # Test get_user_service
-                user_service = get_user_service()
-                assert isinstance(user_service, UserService)
-                
-                # Test get_conversation_service
-                conversation_service = get_conversation_service()
-                assert isinstance(conversation_service, ConversationService)
+            user_service = container.user_service
+            assert isinstance(user_service, UserService)
+            
+            conversation_service = container.conversation_service
+            assert isinstance(conversation_service, ConversationService)
     
     def test_test_container_with_mocks(self, test_container):
-        """Test that test container works with mocked dependencies."""
         assert isinstance(test_container, MockServiceContainer)
         
-        # Test that services are created with mock database
         user_service = test_container.user_service
         assert isinstance(user_service, UserService)
         assert user_service.collection == test_container.mock_db.users
@@ -191,10 +165,8 @@ class TestDependencyInjectionContainer:
 
 
 class TestServiceInterfaces:
-    """Test service interface contracts."""
     
     def test_user_service_implements_interface(self, mock_db):
-        """Test that UserService implements IUserService interface."""
         user_service = UserService(mock_db.users)
         
         # Check that all required methods exist
@@ -210,7 +182,6 @@ class TestServiceInterfaces:
         assert asyncio.iscoroutinefunction(user_service.get_user_by_email)
     
     def test_conversation_service_implements_interface(self, mock_db):
-        """Test that ConversationService implements IConversationService interface."""
         conversation_service = ConversationService(mock_db.conversations)
         
         # Check that all required methods exist
@@ -228,7 +199,6 @@ class TestServiceInterfaces:
         assert asyncio.iscoroutinefunction(conversation_service.delete_conversation)
     
     def test_openai_service_implements_interface(self):
-        """Test that OpenAIService implements IOpenAIService interface."""
         openai_service = OpenAIService()
         
         # Check that all required methods exist
@@ -241,26 +211,21 @@ class TestServiceInterfaces:
 
 
 class TestConfigurationManagement:
-    """Test configuration management functionality."""
     
     def test_config_manager_creation(self):
-        """Test that config manager can be created."""
         config_manager = ConfigManager()
         assert config_manager is not None
         assert isinstance(config_manager, ConfigManager)
     
     def test_environment_detection(self):
-        """Test environment detection functionality."""
         config_manager = ConfigManager()
         
-        # Test environment properties
         assert hasattr(config_manager, 'environment')
         assert hasattr(config_manager, 'is_development')
         assert hasattr(config_manager, 'is_production')
         assert hasattr(config_manager, 'is_testing')
     
     def test_database_config(self):
-        """Test database configuration retrieval."""
         config_manager = ConfigManager()
         db_config = config_manager.get_database_config()
         
@@ -271,7 +236,6 @@ class TestConfigurationManagement:
         assert 'timeout' in db_config
     
     def test_openai_config(self):
-        """Test OpenAI configuration retrieval."""
         config_manager = ConfigManager()
         openai_config = config_manager.get_openai_config()
         
@@ -282,7 +246,6 @@ class TestConfigurationManagement:
         assert 'temperature' in openai_config
     
     def test_security_config(self):
-        """Test security configuration retrieval."""
         config_manager = ConfigManager()
         security_config = config_manager.get_security_config()
         
@@ -293,7 +256,6 @@ class TestConfigurationManagement:
         assert 'cors_origins' in security_config
     
     def test_logging_config(self):
-        """Test logging configuration retrieval."""
         config_manager = ConfigManager()
         logging_config = config_manager.get_logging_config()
         
@@ -303,7 +265,6 @@ class TestConfigurationManagement:
         assert 'file' in logging_config
     
     def test_performance_config(self):
-        """Test performance configuration retrieval."""
         config_manager = ConfigManager()
         performance_config = config_manager.get_performance_config()
         
@@ -314,7 +275,6 @@ class TestConfigurationManagement:
         assert 'database_timeout' in performance_config
     
     def test_config_caching(self):
-        """Test that configuration is cached properly."""
         config_manager = ConfigManager()
         
         # Get config twice
@@ -325,7 +285,6 @@ class TestConfigurationManagement:
         assert config1 is config2
     
     def test_config_cache_clear(self):
-        """Test that configuration cache can be cleared."""
         config_manager = ConfigManager()
         
         # Get config to populate cache
@@ -337,13 +296,14 @@ class TestConfigurationManagement:
         assert len(config_manager._config_cache) == 0
     
     def test_get_config_manager_singleton(self):
-        """Test that get_config_manager returns singleton."""
         manager1 = get_config_manager()
         manager2 = get_config_manager()
         assert manager1 is manager2
     
     def test_get_config_function(self):
-        """Test get_config convenience function."""
+        # Clear cache to ensure test isolation
+        get_config.cache_clear()
+        
         config = get_config()
         assert isinstance(config, dict)
         assert 'environment' in config
@@ -355,17 +315,14 @@ class TestConfigurationManagement:
 
 
 class TestServiceIsolation:
-    """Test that services are properly isolated."""
     
     def test_user_service_isolation(self, test_container):
-        """Test that user service operations are isolated."""
         user_service = test_container.user_service
         
         # Mock successful user creation
         test_container.mock_db.users.find_one.return_value = None
         test_container.mock_db.users.insert_one.return_value = Mock(inserted_id=ObjectId())
         
-        # Test user creation
         user_data = UserCreate(
             email="isolation@example.com",
             full_name="Isolation Test",
@@ -376,13 +333,11 @@ class TestServiceIsolation:
         assert result.email == "isolation@example.com"
 
     def test_conversation_service_isolation(self, test_container):
-        """Test that conversation service operations are isolated."""
         conversation_service = test_container.conversation_service
         
         # Mock successful conversation creation
         test_container.mock_db.conversations.insert_one.return_value = Mock(inserted_id=ObjectId())
         
-        # Test conversation creation
         result = asyncio.run(conversation_service.create_conversation(
             user_id="test_user",
             title="Test Conversation"
@@ -391,10 +346,8 @@ class TestServiceIsolation:
         assert result.title == "Test Conversation"
     
     def test_openai_service_isolation(self, test_container):
-        """Test that OpenAI service operations are isolated."""
         openai_service = test_container.openai_service
         
-        # Test response generation without affecting other services
         messages = [Message(role=MessageRole.USER, content="Hello")]
         result = openai_service.generate_response(messages)
         assert result is not None
@@ -402,10 +355,8 @@ class TestServiceIsolation:
 
 
 class TestTestabilityImprovements:
-    """Test improvements in testability."""
     
     def test_service_mocking(self, test_container):
-        """Test that services can be easily mocked."""
         # Mock the user service
         mock_user_service = Mock()
         test_container.user_service = mock_user_service
@@ -415,7 +366,6 @@ class TestTestabilityImprovements:
         assert user_service is mock_user_service
     
     def test_database_mocking(self, test_container):
-        """Test that database operations can be easily mocked."""
         # Mock database operations
         test_container.mock_db.users.find_one.return_value = {
             "_id": ObjectId(),
@@ -427,15 +377,12 @@ class TestTestabilityImprovements:
             "updated_at": "2024-01-01T00:00:00Z"
         }
         
-        # Test that the mock is used
         user_service = test_container.user_service
         result = asyncio.run(user_service.get_user_by_email("test@example.com"))
         assert result is not None
         assert result.email == "test@example.com"
     
     def test_dependency_injection_testing(self, test_container):
-        """Test that dependency injection works in tests."""
-        # Test that all services are available
         assert test_container.user_service is not None
         assert test_container.conversation_service is not None
         assert test_container.openai_service is not None
@@ -445,7 +392,6 @@ class TestTestabilityImprovements:
         assert test_container.error_recovery is not None
         assert test_container.vacation_planner is not None
         
-        # Test that services are of correct types
         assert isinstance(test_container.user_service, UserService)
         assert isinstance(test_container.conversation_service, ConversationService)
         assert isinstance(test_container.openai_service, OpenAIService)
@@ -457,12 +403,9 @@ class TestTestabilityImprovements:
 
 
 class TestIntegrationWithExistingServices:
-    """Test integration between new modularity features and existing services."""
     
     @pytest.mark.asyncio
     async def test_container_with_real_services(self, test_container):
-        """Test that container works with real service implementations."""
-        # Test user service integration
         user_service = test_container.user_service
         
         # Mock database operations
@@ -481,7 +424,6 @@ class TestIntegrationWithExistingServices:
 
     @pytest.mark.asyncio
     async def test_service_interaction(self, test_container):
-        """Test that services can interact through the container."""
         user_service = test_container.user_service
         conversation_service = test_container.conversation_service
         
@@ -508,7 +450,6 @@ class TestIntegrationWithExistingServices:
         assert conversation.user_id == str(user.id)
     
     def test_configuration_integration(self, test_container):
-        """Test that configuration management integrates with services."""
         config_manager = get_config_manager()
         
         # Get configuration
@@ -525,10 +466,8 @@ class TestIntegrationWithExistingServices:
 
 
 class TestErrorHandling:
-    """Test error handling in the modularity improvements."""
     
     def test_container_database_error(self):
-        """Test container handles database errors gracefully."""
         with patch('app.core.container.get_database', return_value=None):
             container = ServiceContainer()
             
@@ -537,19 +476,14 @@ class TestErrorHandling:
                 _ = container.user_service
     
     def test_config_validation(self):
-        """Test configuration validation."""
         config_manager = ConfigManager()
         
-        # Test validation method exists
         assert hasattr(config_manager, 'validate_config')
         
-        # Test validation can be called
         result = config_manager.validate_config()
         assert isinstance(result, bool)
     
     def test_service_creation_errors(self, test_container):
-        """Test that service creation errors are handled properly."""
-        # Test with invalid database by creating a new container with None database
         with patch('app.core.container.get_database', return_value=None):
             container = ServiceContainer()
             with pytest.raises(RuntimeError, match="Database is not available"):
@@ -557,16 +491,13 @@ class TestErrorHandling:
 
 
 class TestPerformanceAndScalability:
-    """Test performance and scalability aspects of modularity improvements."""
     
     def test_container_performance(self, mock_db):
-        """Test that container operations are performant."""
         import time
         
         with patch('app.core.container.get_database', return_value=mock_db):
             container = ServiceContainer()
             
-            # Test service access performance
             start_time = time.time()
             for _ in range(100):
                 _ = container.user_service
@@ -576,7 +507,6 @@ class TestPerformanceAndScalability:
             assert (end_time - start_time) < 1.0
     
     def test_config_caching_performance(self):
-        """Test that configuration caching improves performance."""
         import time
         
         config_manager = ConfigManager()
@@ -596,7 +526,6 @@ class TestPerformanceAndScalability:
         assert config1 is config2
     
     def test_memory_usage(self, test_container):
-        """Test that modularity improvements don't cause memory leaks."""
         import gc
         import sys
         

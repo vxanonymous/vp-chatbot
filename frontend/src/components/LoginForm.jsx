@@ -5,17 +5,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 
 const LoginForm = ({ onSwitchToSignup }) => {
+
   const { login } = useAuth();
   const { addFormNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const { register, handleSubmit, formState: { errors }, setError } = useForm();
 
   const onSubmit = async (data) => {
+
     setIsLoading(true);
     try {
       const result = await login(data.email, data.password);
       if (!result.success) {
-        // Show them what went wrong with their login
+
         addFormNotification(result.message || 'Login failed', 'error');
       }
     } finally {

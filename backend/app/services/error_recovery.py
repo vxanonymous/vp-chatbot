@@ -6,18 +6,15 @@ logger = logging.getLogger(__name__)
 
 
 class ErrorRecoveryService:
-    """
-    Helps keep vacation planning conversations flowing smoothly when things go wrong.
-    
-    When something doesn't work as expected, we provide friendly responses to help
-    users get back to planning their dream vacation without feeling frustrated.
-    """
+    # Helps keep vacation planning conversations flowing smoothly when things go wrong.
+    # When something doesn't work as expected, we provide friendly responses to help
+    # users get back to planning their dream vacation without feeling frustrated.
     
     def __init__(self):
         self.fallback_responses = self._init_fallback_responses()
     
     def _init_fallback_responses(self) -> Dict[str, List[str]]:
-        """Set up friendly responses to help users when something goes wrong."""
+        # Set up friendly responses to help users when something goes wrong.
         return {
             "general_error": [
                 "I apologize for the confusion; let me help you plan your perfect vacation. What destination are you considering?",
@@ -47,17 +44,17 @@ class ErrorRecoveryService:
         }
 
     def handle_technical_error(self):
-        """Let the user know we're having a tech hiccup, but we're still here for them."""
+        # Let the user know we're having a tech hiccup, but we're still here for them.
         return "Oops, looks like I'm having a technical hiccup! But don't worry, I'm still here to help you plan your dream vacation. Where would you like to go next?"
 
 
     def handle_ambiguous_request(self, message):
-        """Ask for clarification in a friendly, approachable way."""
+        # Ask for clarification in a friendly, approachable way.
         return "Hmm, I want to make sure I get this right. Could you clarify a bit more about what you're looking for in your trip?"
 
 
     def handle_off_topic_message(self, message):
-        """Gently nudge the user back to vacation planning in a warm way."""
+        # Gently nudge the user back to vacation planning in a warm way.
         return "I’m all about travel planning! Let’s get back to your next adventure—any destinations on your mind?"
 
     
@@ -66,7 +63,7 @@ class ErrorRecoveryService:
         error_type: str, 
         context: Optional[Dict] = None
     ) -> str:
-        """Give users a friendly response to help them get back to vacation planning when something goes wrong."""
+        # Give users a friendly response to help them get back to vacation planning when something goes wrong.
         
         # Figure out what kind of response would be most helpful
         if error_type == "api_error":
@@ -90,7 +87,7 @@ class ErrorRecoveryService:
         return base_response
     
     def _enhance_with_context(self, base_response: str, context: Dict) -> str:
-        """Make responses more personal by adding what we know about their vacation plans."""
+        # Make responses more personal by adding what we know about their vacation plans.
         if context.get("last_destination"):
             base_response += f"\n\nWere you still interested in {context['last_destination']}?"
         elif context.get("stage") == "planning":
@@ -103,7 +100,7 @@ class ErrorRecoveryService:
         messages: List[Dict],
         new_message: str
     ) -> Dict[str, Any]:
-        """Check if the conversation is flowing smoothly and naturally."""
+        # Check if the conversation is flowing smoothly and naturally.
         
         validation = {
             "is_valid": True,
@@ -136,7 +133,7 @@ class ErrorRecoveryService:
         return validation
     
     def _has_travel_context(self, message: str) -> bool:
-        """See if the message is about travel or vacation planning"""
+        # See if the message is about travel or vacation planning
         travel_keywords = [
             "travel", "trip", "vacation", "visit", "go", "fly", "stay",
             "hotel", "flight", "destination", "holiday", "tour", "booking",
@@ -148,7 +145,7 @@ class ErrorRecoveryService:
         )
 
     def recover_from_error(self, error: str) -> str:
-        """Help the user get back on track in a natural, supportive way."""
+        # Help the user get back on track in a natural, supportive way.
         error_lower = error.lower()
         if "off topic" in error_lower or "unrelated" in error_lower:
             # Gently nudge the user back to travel planning

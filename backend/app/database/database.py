@@ -4,13 +4,15 @@ import logging
 import ssl
 import certifi
 from typing import Optional, Any
-from app.config import settings
+from app.config import get_settings
+
+settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
 
 class MongoDB:
-    """MongoDB connection manager for the application."""
+    # MongoDB connection manager for the application.
     
     def __init__(self):
         self.client: Any = None
@@ -21,7 +23,7 @@ db = MongoDB()
 
 
 async def connect_to_mongo():
-    """Establish connection to MongoDB database for vacation chatbot data."""
+    # Establish connection to MongoDB database for vacation chatbot data.
     try:
         # Determine connection type (Atlas cloud or local)
         if "mongodb+srv://" in settings.mongodb_url or "mongodb.net" in settings.mongodb_url:
@@ -50,7 +52,6 @@ async def connect_to_mongo():
             # Set up database reference for vacation chatbot collections
             db.database = db.client[settings.mongodb_db_name]
             
-            # Test the connection to ensure database is accessible
             await db.client.server_info()
             logger.info("Great! Successfully connected to the MongoDB database")
             
@@ -68,16 +69,16 @@ async def connect_to_mongo():
 
 
 async def close_mongo_connection():
-    """Close the MongoDB database connection."""
+    # Close the MongoDB database connection.
     if db.client:
         db.client.close()
         logger.info("Successfully closed the MongoDB connection")
 
 
 async def create_indexes():
-    """Create database indexes for optimal vacation chatbot query performance."""
+    # Create database indexes for optimal vacation chatbot query performance.
     try:
-        if not db.database:
+        if db.database is None:
             logger.warning("Database isn't ready yet, so we can't create indexes")
             return
             
@@ -95,12 +96,15 @@ async def create_indexes():
 
 
 def get_database():
+    # Get the database instance
     return db.database
 
 
 def is_database_available():
-    """Check if database is available."""
+    # Check if database is available.
     try:
-        return db.client is not None and db.database is not None
+        if db.client is None or db.database is None:
+            return False
+        return True
     except Exception:
         return False

@@ -14,7 +14,7 @@ class UpdateOneResult:
 
 @pytest.mark.asyncio
 async def test_create_conversation_direct():
-    """Test creating a conversation directly using the service without global mocking."""
+    # Test creating a conversation directly using the service without global mocking.
     # Import here to avoid any global mocking
     from app.services.conversation_service import ConversationService
     
@@ -48,7 +48,7 @@ async def test_create_conversation_direct():
 
 @pytest.mark.asyncio
 async def test_get_conversation_direct():
-    """Test getting a conversation directly using the service."""
+    # Test getting a conversation directly using the service.
     from app.services.conversation_service import ConversationService
     
     # Create a mock collection with proper AsyncMock methods
@@ -86,7 +86,7 @@ async def test_get_conversation_direct():
 
 @pytest.mark.asyncio
 async def test_add_message_direct():
-    """Test adding a message directly using the service."""
+    # Test adding a message directly using the service.
     from app.services.conversation_service import ConversationService
     
     # Create a mock collection with proper AsyncMock methods

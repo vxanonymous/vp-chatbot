@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""
-Comprehensive System Monitor
-Monitors endpoints, database queries, and provides optimization recommendations.
-"""
+# Comprehensive System Monitor
+# Monitors endpoints, database queries, and provides optimization recommendations.
 
 import asyncio
 import aiohttp
@@ -31,7 +29,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ComprehensiveMonitor:
-    """Comprehensive system monitoring and optimization."""
+    # Comprehensive system monitoring and optimization.
     
     def __init__(self, base_url: str = "http://localhost:8000", 
                  database_url: str = "mongodb://localhost:27017"):
@@ -43,20 +41,17 @@ class ComprehensiveMonitor:
         
     async def run_comprehensive_analysis(self, duration: int = 300, 
                                        interval: int = 30) -> Dict[str, Any]:
-        """Run comprehensive system analysis."""
+        # Run comprehensive system analysis.
         print("🚀 Starting comprehensive system analysis...")
-        
-        # Run endpoint monitoring
+
         print("🔍 Phase 1: Endpoint Performance Monitoring")
         endpoint_results = await self.endpoint_monitor.monitor_all_endpoints(duration, interval)
         endpoint_analysis = self.endpoint_monitor.analyze_performance(endpoint_results)
-        
-        # Run database optimization analysis
+
         print("🔍 Phase 2: Database Performance Analysis")
         db_performance = await self.database_optimizer.analyze_database_performance()
         db_profile = await self.database_optimizer.profile_query_performance(50)
-        
-        # Combine results
+
         self.results = {
             "timestamp": datetime.now().isoformat(),
             "base_url": self.base_url,
@@ -70,7 +65,7 @@ class ComprehensiveMonitor:
         return self.results
     
     def generate_comprehensive_report(self) -> str:
-        """Generate a comprehensive optimization report."""
+        # Generate a comprehensive optimization report.
         endpoint_analysis = self.results.get("endpoint_analysis", {})
         db_performance = self.results.get("database_performance", {})
         db_profile = self.results.get("database_profile", {})
@@ -86,8 +81,7 @@ class ComprehensiveMonitor:
    Database URL: {self.database_url}
    Analysis Duration: {len(self.results.get('endpoint_monitoring', {}).get('/health', [])) * 30}s
 """
-        
-        # Endpoint Performance Summary
+
         if endpoint_analysis.get("performance_summary"):
             report += f"""
 🌐 ENDPOINT PERFORMANCE SUMMARY:
@@ -101,8 +95,7 @@ class ComprehensiveMonitor:
    Unreliable Endpoints: {unreliable_endpoints}
    Overall Health: {'🟢 Good' if slow_endpoints == 0 and unreliable_endpoints == 0 else '🟡 Fair' if slow_endpoints < 2 else '🔴 Poor'}
 """
-            
-            # Show worst performing endpoints
+
             if endpoint_analysis.get("slow_endpoints"):
                 report += f"""
 🚨 SLOWEST ENDPOINTS:
@@ -112,8 +105,7 @@ class ComprehensiveMonitor:
                     report += f"""
    • {endpoint['endpoint']}: {endpoint['avg_response_time']:.3f}s avg
 """
-        
-        # Database Performance Summary
+
         if db_performance:
             report += f"""
 🗄️ DATABASE PERFORMANCE SUMMARY:
@@ -127,8 +119,7 @@ class ComprehensiveMonitor:
    Critical Queries: {critical_queries}
    Database Health: {'🟢 Good' if slow_queries == 0 else '🟡 Fair' if critical_queries == 0 else '🔴 Poor'}
 """
-            
-            # Show worst performing queries
+
             if slow_queries > 0:
                 report += f"""
 🚨 SLOWEST DATABASE QUERIES:
@@ -141,8 +132,7 @@ class ComprehensiveMonitor:
                     report += f"""
    • {name}: {data['execution_time']:.3f}s ({data['complexity']})
 """
-        
-        # Query Profile Summary
+
         if db_profile:
             report += f"""
 📊 QUERY PROFILE SUMMARY:
@@ -160,8 +150,7 @@ class ComprehensiveMonitor:
    Poor Performance: {poor_queries} queries
    Overall Query Health: {'🟢 Good' if poor_queries == 0 else '🟡 Fair' if poor_queries < 2 else '🔴 Poor'}
 """
-        
-        # Critical Issues
+
         critical_issues = []
         
         if endpoint_analysis.get("slow_endpoints"):
@@ -181,8 +170,7 @@ class ComprehensiveMonitor:
 """
             for issue in critical_issues:
                 report += f"   {issue}\n"
-        
-        # Optimization Recommendations
+
         recommendations = self._generate_comprehensive_recommendations()
         
         if recommendations:
@@ -196,8 +184,7 @@ class ComprehensiveMonitor:
 """
                     for rec in recs:
                         report += f"      {rec}\n"
-        
-        # Implementation Priority
+
         report += f"""
 🔧 IMPLEMENTATION PRIORITY:
    1. Fix critical database queries (immediate)
@@ -215,7 +202,7 @@ class ComprehensiveMonitor:
         return report
     
     def _generate_comprehensive_recommendations(self) -> Dict[str, List[str]]:
-        """Generate comprehensive optimization recommendations."""
+        # Generate comprehensive optimization recommendations.
         recommendations = {
             "immediate_actions": [],
             "performance_optimizations": [],
@@ -226,8 +213,7 @@ class ComprehensiveMonitor:
         endpoint_analysis = self.results.get("endpoint_analysis", {})
         db_performance = self.results.get("database_performance", {})
         db_profile = self.results.get("database_profile", {})
-        
-        # Immediate actions for critical issues
+
         if endpoint_analysis.get("unreliable_endpoints"):
             recommendations["immediate_actions"].append("• Add retry logic for unreliable endpoints")
             recommendations["immediate_actions"].append("• Implement circuit breakers")
@@ -237,8 +223,7 @@ class ComprehensiveMonitor:
             if critical_queries > 0:
                 recommendations["immediate_actions"].append("• Optimize critical database queries")
                 recommendations["immediate_actions"].append("• Add query timeout handling")
-        
-        # Performance optimizations
+
         if endpoint_analysis.get("slow_endpoints"):
             recommendations["performance_optimizations"].append("• Implement response caching")
             recommendations["performance_optimizations"].append("• Optimize database queries in slow endpoints")
@@ -250,8 +235,7 @@ class ComprehensiveMonitor:
                 recommendations["performance_optimizations"].append("• Add database indexes for slow queries")
                 recommendations["performance_optimizations"].append("• Implement query result caching")
                 recommendations["performance_optimizations"].append("• Consider read replicas for heavy read operations")
-        
-        # Infrastructure improvements
+
         recommendations["infrastructure_improvements"].extend([
             "• Implement database connection pooling",
             "• Add load balancing for high-traffic endpoints",
@@ -259,8 +243,7 @@ class ComprehensiveMonitor:
             "• Implement rate limiting",
             "• Add CDN for static content"
         ])
-        
-        # Monitoring setup
+
         recommendations["monitoring_setup"].extend([
             "• Set up real-time endpoint monitoring",
             "• Implement database query monitoring",
@@ -272,14 +255,14 @@ class ComprehensiveMonitor:
         return recommendations
     
     def save_comprehensive_results(self, filename: str = "comprehensive_analysis.json"):
-        """Save comprehensive analysis results."""
+        # Save comprehensive analysis results.
         with open(filename, 'w') as f:
             json.dump(self.results, f, indent=2)
         
         print(f"Comprehensive analysis results saved to {filename}")
     
     async def run_quick_health_check(self) -> Dict[str, Any]:
-        """Run a quick health check of the system."""
+        # Run a quick health check of the system.
         print("🔍 Running quick health check...")
         
         health_results = {
@@ -288,8 +271,7 @@ class ComprehensiveMonitor:
             "database_health": {},
             "overall_health": "unknown"
         }
-        
-        # Check endpoint health
+
         try:
             endpoint_result = await self.endpoint_monitor.test_endpoint("/health")
             health_results["endpoint_health"] = {
@@ -302,8 +284,7 @@ class ComprehensiveMonitor:
                 "status": "error",
                 "error": str(e)
             }
-        
-        # Check database health (simulated)
+
         try:
             db_performance = await self.database_optimizer.analyze_database_performance()
             slow_queries = len([q for q in db_performance.values() if q.get("is_slow", False)])
@@ -319,8 +300,7 @@ class ComprehensiveMonitor:
                 "status": "error",
                 "error": str(e)
             }
-        
-        # Determine overall health
+
         endpoint_healthy = health_results["endpoint_health"].get("status") == "healthy"
         db_healthy = health_results["database_health"].get("status") in ["healthy", "degraded"]
         
@@ -333,9 +313,8 @@ class ComprehensiveMonitor:
         
         return health_results
 
-
 async def main():
-    """Main function."""
+    # Main function.
     parser = argparse.ArgumentParser(description="Comprehensive System Monitor")
     parser.add_argument("--url", default="http://localhost:8000", help="Base URL to monitor")
     parser.add_argument("--database-url", default="mongodb://localhost:27017", 
@@ -354,11 +333,10 @@ async def main():
     monitor = ComprehensiveMonitor(args.url, args.database_url)
     
     if args.quick:
-        # Quick health check
+
         health_results = await monitor.run_quick_health_check()
         print(json.dumps(health_results, indent=2))
-        
-        # Print summary
+
         status_emoji = {
             "healthy": "🟢",
             "degraded": "🟡", 
@@ -372,12 +350,11 @@ async def main():
         print(f"{status_emoji.get(health_results['database_health'].get('status', 'unknown'), '⚪')} Database: {health_results['database_health'].get('status', 'unknown')}")
         
     else:
-        # Comprehensive analysis
+
         results = await monitor.run_comprehensive_analysis(args.duration, args.interval)
         report = monitor.generate_comprehensive_report()
         print(report)
         monitor.save_comprehensive_results(args.output)
-
 
 if __name__ == "__main__":
     asyncio.run(main()) 

@@ -6,7 +6,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: vacation-chatbot-backend
+    container_name: vacation-planning-system-backend
     restart: unless-stopped
     environment:
       - ENVIRONMENT=production
@@ -35,7 +35,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: vacation-chatbot-frontend
+    container_name: vacation-planning-system-frontend
     restart: unless-stopped
     environment:
       - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000/api/v1}
@@ -55,10 +55,10 @@ services:
   # MongoDB Database
   mongodb:
     image: mongo:6.0
-    container_name: vacation-chatbot-mongodb
+    container_name: vacation-planning-system-mongodb
     restart: unless-stopped
     environment:
-      - MONGO_INITDB_DATABASE=vacation_chatbot
+      - MONGO_INITDB_DATABASE=vacation_planning_system
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
     ports:
@@ -78,7 +78,7 @@ services:
   # Nginx Reverse Proxy (Optional - for SSL termination)
   nginx:
     image: nginx:alpine
-    container_name: vacation-chatbot-nginx
+    container_name: vacation-planning-system-nginx
     restart: unless-stopped
     ports:
       - "443:443"
@@ -97,7 +97,7 @@ services:
   # Redis Cache (Optional - for session storage)
   redis:
     image: redis:7-alpine
-    container_name: vacation-chatbot-redis
+    container_name: vacation-planning-system-redis
     restart: unless-stopped
     ports:
       - "6379:6379"

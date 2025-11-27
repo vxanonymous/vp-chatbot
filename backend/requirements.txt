@@ -1,35 +1,8 @@
-# Vacation Planning Chatbot - Backend Dependencies
-# 
-# PURPOSE:
-#     This file contains all Python dependencies required for the Vacation Planning
-#     Chatbot backend. It includes FastAPI framework, database drivers, authentication
-#     libraries, testing tools, and development utilities.
-# 
-# USAGE:
-#     - Install: pip install -r requirements.txt
-#     - Development: pip install -r requirements.txt[dev]
-#     - Production: pip install -r requirements.txt
-# 
-# DEPENDENCIES:
-#     - FastAPI: Web framework for API development
-#     - MongoDB: Database driver for data persistence
-#     - OpenAI: AI integration for chat responses
-#     - Authentication: JWT and password hashing
-#     - Testing: pytest and related tools
-#     - Code Quality: linting and formatting tools
-# 
-# DEPENDENTS:
-#     - Backend application (app.main)
-#     - All service modules
-#     - Testing frameworks
-#     - Deployment scripts
-#     - Docker containers
-
 # Core FastAPI dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
+fastapi>=0.121.3,<0.122.0
+uvicorn[standard]>=0.38.0,<0.39.0
+pydantic>=2.12.4,<3.0.0
+pydantic-settings>=2.12.0,<3.0.0
 
 # Database
 motor==3.3.2

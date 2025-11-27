@@ -1,12 +1,10 @@
-"""
-Authentication and token models for user sessions.
-"""
+# Authentication and token models for user sessions.
 from typing import Optional
 from pydantic import BaseModel
 
 
 class Token(BaseModel):
-    """Authentication token response model."""
+    # Authentication token response model.
     access_token: str
     token_type: str
     user_id: str
@@ -15,6 +13,6 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    """Token data model for JWT payload."""
+    # Token data model for JWT payload.
     user_id: Optional[str] = None
     email: Optional[str] = None 

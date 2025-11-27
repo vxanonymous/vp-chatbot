@@ -5,11 +5,11 @@ from bson import ObjectId
 from .object_id import PyObjectId
 
 class ConversationCreate(BaseModel):
-    """Model for creating new conversations."""
+    # Model for creating new conversations.
     title: str = Field(..., min_length=1, max_length=200, description="Conversation title")
 
 class ConversationInDB(BaseModel):
-    """Internal conversation model for database operations."""
+    # Internal conversation model for database operations.
     id: PyObjectId = Field(alias="_id")
     user_id: str
     title: str = "New Conversation"
@@ -26,7 +26,7 @@ class ConversationInDB(BaseModel):
     )
 
 class ConversationSummary(BaseModel):
-    """Summary model for conversation listings."""
+    # Summary model for conversation listings.
     id: str
     title: str
     created_at: datetime

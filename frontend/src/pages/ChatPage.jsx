@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Menu, X, Map } from 'lucide-react';
 import ConversationSidebar from '../components/ConversationSidebar';
 import MessageList from '../components/MessageList';
 import MessageInput from '../components/MessageInput';
 import VacationSummary from '../components/VacationSummary';
+import VacationMap from '../components/VacationMap';
 import { useConversations } from '../hooks/useConversations';
 import { useChat } from '../hooks/useChat';
 import { useAuth } from '../contexts/AuthContext';
@@ -48,16 +49,18 @@ const SuggestionsList = memo(({ suggestions = [], onSuggestionClick }) => {
 });
 
 const ChatPage = () => {
+
   const { conversationId } = useParams();
   const navigate = useNavigate();
   
-  // UI state
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // System message dismiss logic
+  const [mapSidebarOpen, setMapSidebarOpen] = useState(false);
+
   const [localMessages, setLocalMessages] = useState([]);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
 
-  // Custom hooks
+
   const { user } = useAuth();
   const {
     conversations,
@@ -73,8 +76,9 @@ const ChatPage = () => {
   
   const handleConversationUpdate = useCallback((newConversationId) => {
     navigate(`/chat/${newConversationId}`, { replace: true });
-    // Add a small delay to ensure the conversation is fully created before loading
+
     setTimeout(() => {
+
       loadConversations();
     }, 500);
   }, [navigate, loadConversations]);
@@ -99,13 +103,15 @@ const ChatPage = () => {
   const handleDismissSystemMessage = useCallback((index) => {
     // Since system messages are only in localMessages, we can filter directly
     setLocalMessages((msgs) => msgs.filter((msg, i) => i !== index));
+
   }, []);
 
-  // Add welcome message for new conversations
+
   useEffect(() => {
-    if (messages.length === 0 && localMessages.length === 0 && !hasShownWelcome && user) {
+
+      if (messages.length === 0 && localMessages.length === 0 && !hasShownWelcome && user) {
       const name = user.full_name || user.email;
-      // Add inline notification instead of system message
+
       addInlineNotification(`Welcome back, ${name}! I'm here to help you plan your perfect trip. Ask me about destinations, itineraries, budgets, or anything travel-related!`, 'info');
       setHasShownWelcome(true);
     }
@@ -113,20 +119,20 @@ const ChatPage = () => {
 
 
 
-  // Load conversations on mount
+
   useEffect(() => {
+
     loadConversations();
   }, [loadConversations]);
 
-  // Event handlers
+
   const handleNewConversation = useCallback(async () => {
     try {
       const newConv = await createNewConversation();
       if (newConv) {
         navigate(`/chat/${newConv.id}`);
-        // Add inline notification instead of system message
-        addInlineNotification('New conversation created! I\'m ready to help you plan your vacation. What would you like to know?', 'success');
-        addGlobalNotification('New conversation created', 'success');
+
+        addGlobalNotification('New conversation created! I\'m ready to help you plan your vacation.', 'success');
       }
     } catch (error) {
       addGlobalNotification('Failed to create new conversation', 'error');
@@ -139,9 +145,9 @@ const ChatPage = () => {
     try {
       const deleted = await removeConversation(id);
       if (deleted && conversationId === id) {
-        // Add inline notification instead of system message
+
         addInlineNotification('Conversation deleted successfully.', 'info');
-        // Cleanup if we're deleting the current conversation
+
         cleanupOnDeletion();
         navigate('/chat');
         addGlobalNotification('Conversation deleted', 'success');
@@ -161,11 +167,12 @@ const ChatPage = () => {
 
   const handleSendMessage = useCallback((content) => {
     sendMessage(content);
-    // Update conversation timestamp after sending
+
     if (conversationId) {
       setTimeout(() => touchConversation(conversationId), 100);
+
     }
-    // Add a system message for the first message in a conversation
+
     if (messages.length === 0 && localMessages.length === 1) {
       setLocalMessages(prev => [...prev, { 
         role: 'system', 
@@ -184,15 +191,46 @@ const ChatPage = () => {
     setSidebarOpen(prev => !prev);
   }, []);
 
+  const handleMapSidebarToggle = useCallback(() => {
+    setMapSidebarOpen(prev => !prev);
+  }, []);
+
+  // Open map sidebar automatically when a new summary with destinations arrives
+  useEffect(() => {
+    console.log('Vacation summary useEffect triggered. vacationSummary:', vacationSummary);
+    if (vacationSummary) {
+      const hasDestinations = vacationSummary.destinations?.length > 0 || vacationSummary.destination;
+      console.log('Vacation summary check:', {
+        vacationSummary,
+        hasDestinations,
+        destinations: vacationSummary.destinations,
+        destination: vacationSummary.destination,
+        destinationsLength: vacationSummary.destinations?.length,
+        hasDestination: !!vacationSummary.destination
+      });
+      if (hasDestinations) {
+        console.log('Opening map sidebar with vacation summary:', vacationSummary);
+        setMapSidebarOpen(true);
+      } else {
+        console.warn('Vacation summary exists but has no destinations');
+      }
+    } else {
+      console.log('No vacation summary available');
+    }
+  }, [vacationSummary]);
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
+
     const scrollToBottom = () => {
+
       const element = document.getElementById('messages-end');
       element?.scrollIntoView({ behavior: 'smooth' });
     };
     
     const timer = setTimeout(scrollToBottom, 100);
     return () => clearTimeout(timer);
+
   }, [messages]);
 
   return (
@@ -227,7 +265,7 @@ const ChatPage = () => {
           <MobileHeader onMenuClick={handleSidebarToggle} />
           
           <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 flex flex-col">
+            <div className={`flex-1 flex flex-col transition-all duration-300 ${mapSidebarOpen ? 'lg:mr-96' : ''}`}>
               <div className="flex-1 overflow-y-auto px-4 py-6">
                 <div className="max-w-3xl mx-auto">
                   <MessageList messages={allMessages} isLoading={isChatLoading} onDismissSystemMessage={handleDismissSystemMessage} />
@@ -249,15 +287,96 @@ const ChatPage = () => {
                 </div>
               </div>
             </div>
-            
-            {vacationSummary && (
-              <div className="hidden lg:block w-80 border-l bg-white dark:bg-gray-900 p-6 overflow-y-auto">
-                <VacationSummary summary={vacationSummary} />
-              </div>
-            )}
           </div>
+          
+          {/* Map Sidebar - Outside the flex container */}
+          {vacationSummary && (vacationSummary.destinations?.length > 0 || vacationSummary.destination) && (
+            <>
+              {/* Toggle button - always visible when map is available */}
+              <button
+                onClick={handleMapSidebarToggle}
+                className={`fixed bottom-24 right-6 z-40 px-4 py-3 rounded-full shadow-xl bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-400 flex items-center gap-2 transition-all ${mapSidebarOpen ? 'lg:right-[400px]' : ''}`}
+              >
+                <Map className="h-5 w-5" />
+                <span className="hidden sm:inline">{mapSidebarOpen ? 'Hide' : 'Show'} Map</span>
+              </button>
+
+              {/* Desktop: Right sidebar */}
+              <div className={`hidden lg:block fixed right-0 top-0 h-full w-96 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-xl transition-transform duration-300 z-30 ${mapSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="h-full flex flex-col">
+                  <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Map className="h-5 w-5" />
+                      Trip Map
+                    </h2>
+                    <button
+                      onClick={handleMapSidebarToggle}
+                      className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-1"
+                      aria-label="Close map"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto">
+                    <div className="p-4">
+                      <VacationSummary summary={vacationSummary} />
+                    </div>
+                    
+                    <div className="px-4 pb-4">
+                      <VacationMap
+                        destinations={vacationSummary.destinations || (vacationSummary.destination ? [vacationSummary.destination] : [])}
+                        itinerary={vacationSummary.itinerary || []}
+                        route={vacationSummary.route || []}
+                        height="500px"
+                        className="rounded-lg overflow-hidden"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile: Full screen drawer */}
+              {mapSidebarOpen && (
+                <div className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-gray-900">
+                  <div className="h-full flex flex-col">
+                    <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Map className="h-5 w-5" />
+                        Trip Map
+                      </h2>
+                      <button
+                        onClick={handleMapSidebarToggle}
+                        className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-1"
+                        aria-label="Close map"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="p-4">
+                        <VacationSummary summary={vacationSummary} />
+                      </div>
+                      
+                      <div className="px-4 pb-4">
+                        <VacationMap
+                          destinations={vacationSummary.destinations || (vacationSummary.destination ? [vacationSummary.destination] : [])}
+                          itinerary={vacationSummary.itinerary || []}
+                          route={vacationSummary.route || []}
+                          height="400px"
+                          className="rounded-lg overflow-hidden"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
+
     </ErrorBoundary>
   );
 };

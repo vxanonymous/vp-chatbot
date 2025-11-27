@@ -1,42 +1,42 @@
-"""
-Modular configuration management for the application.
-This provides environment-specific configuration and validation.
-"""
+# Modular configuration management for the application.
+import logging
 from typing import Optional, Dict, Any
 from functools import lru_cache
 from app.config import Settings
 
+logger = logging.getLogger(__name__)
+
 
 class ConfigManager:
-    """Manages application configuration with environment-specific settings."""
     
     def __init__(self, settings: Optional[Settings] = None):
+        # Initialize configuration manager with settings
         self._settings = settings or Settings()
         self._environment = self._settings.environment
         self._config_cache: Dict[str, Any] = {}
     
     @property
     def environment(self) -> str:
-        """Get current environment."""
+        # Get current environment.
         return self._environment
     
     @property
     def is_development(self) -> bool:
-        """Check if running in development mode."""
+        # Check if running in development mode.
         return self._environment == "development"
     
     @property
     def is_production(self) -> bool:
-        """Check if running in production mode."""
+        # Check if running in production mode.
         return self._environment == "production"
     
     @property
     def is_testing(self) -> bool:
-        """Check if running in testing mode."""
+        # Check if running in testing mode.
         return self._environment == "testing"
     
     def get_database_config(self) -> Dict[str, Any]:
-        """Get database configuration for current environment."""
+        # Get database configuration for current environment.
         cache_key = f"database_{self._environment}"
         if cache_key not in self._config_cache:
             config = {
@@ -65,34 +65,36 @@ class ConfigManager:
         return self._config_cache[cache_key]
     
     def get_openai_config(self) -> Dict[str, Any]:
-        """Get OpenAI configuration for current environment."""
-        cache_key = f"openai_{self._environment}"
+        # Get OpenRouter configuration for current environment.
+        cache_key = f"openrouter_{self._environment}"
         if cache_key not in self._config_cache:
             config = {
-                "api_key": self._settings.openai_api_key,
-                "model": self._settings.openai_model,
-                "max_tokens": self._settings.openai_max_tokens,
-                "temperature": self._settings.openai_temperature,
-                "timeout": self._settings.openai_timeout,
+                "api_key": self._settings.openrouter_api_key,
+                "model": self._settings.openrouter_model,
+                "max_tokens": self._settings.openrouter_max_tokens,
+                "temperature": self._settings.openrouter_temperature,
+                "timeout": self._settings.openrouter_timeout,
+                "base_url": self._settings.openrouter_base_url,
             }
             
             # Environment-specific overrides
             if self.is_development:
                 config["temperature"] = 0.7  # More creative in dev
-                config["timeout"] = 30  # Shorter timeout for dev
+                config["timeout"] = 120
             elif self.is_production:
                 config["temperature"] = 0.5  # More consistent in prod
-                config["timeout"] = 60  # Longer timeout for prod
+                config["timeout"] = 180
             elif self.is_testing:
                 config["api_key"] = "test_key"
                 config["timeout"] = 5  # Very short timeout for tests
+                config["base_url"] = "https://openrouter.ai/api/v1"
             
             self._config_cache[cache_key] = config
         
         return self._config_cache[cache_key]
     
     def get_security_config(self) -> Dict[str, Any]:
-        """Get security configuration for current environment."""
+        # Get security configuration for current environment.
         cache_key = f"security_{self._environment}"
         if cache_key not in self._config_cache:
             config = {
@@ -118,7 +120,7 @@ class ConfigManager:
         return self._config_cache[cache_key]
     
     def get_logging_config(self) -> Dict[str, Any]:
-        """Get logging configuration for current environment."""
+        # Get logging configuration for current environment.
         cache_key = f"logging_{self._environment}"
         if cache_key not in self._config_cache:
             config = {
@@ -133,7 +135,7 @@ class ConfigManager:
                 config["format"] = "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
             elif self.is_production:
                 config["level"] = "WARNING"
-                config["file"] = "/var/log/vacation-chatbot/app.log"
+                config["file"] = "/var/log/vacation-planning-system/app.log"
             elif self.is_testing:
                 config["level"] = "ERROR"
                 config["format"] = "%(levelname)s - %(message)s"
@@ -143,7 +145,7 @@ class ConfigManager:
         return self._config_cache[cache_key]
     
     def get_performance_config(self) -> Dict[str, Any]:
-        """Get performance configuration for current environment."""
+        # Get performance configuration for current environment.
         cache_key = f"performance_{self._environment}"
         if cache_key not in self._config_cache:
             config = {
@@ -157,11 +159,11 @@ class ConfigManager:
             if self.is_development:
                 config["cache_ttl"] = 60  # Shorter cache in dev
                 config["max_concurrent_requests"] = 5
-                config["request_timeout"] = 60  # Longer timeout for debugging
+                config["request_timeout"] = 120
             elif self.is_production:
                 config["cache_ttl"] = 600  # Longer cache in prod
                 config["max_concurrent_requests"] = 50
-                config["request_timeout"] = 30
+                config["request_timeout"] = 180
             elif self.is_testing:
                 config["cache_ttl"] = 0  # No cache in tests
                 config["max_concurrent_requests"] = 1
@@ -172,7 +174,7 @@ class ConfigManager:
         return self._config_cache[cache_key]
     
     def validate_config(self) -> bool:
-        """Validate configuration for current environment."""
+        # Validate configuration for current environment.
         try:
             # Validate database config
             db_config = self.get_database_config()
@@ -195,7 +197,7 @@ class ConfigManager:
             return False
     
     def get_all_config(self) -> Dict[str, Any]:
-        """Get all configuration for current environment."""
+        # Get all configuration for current environment.
         return {
             "environment": self._environment,
             "database": self.get_database_config(),
@@ -206,11 +208,11 @@ class ConfigManager:
         }
     
     def clear_cache(self):
-        """Clear configuration cache."""
+        # Clear configuration cache.
         self._config_cache.clear()
     
     def get_config(self, config_type: str) -> Dict[str, Any]:
-        """Get specific configuration type."""
+        # Get specific configuration type.
         config_methods = {
             "database": self.get_database_config,
             "openai": self.get_openai_config,
@@ -230,7 +232,7 @@ _config_manager: Optional[ConfigManager] = None
 
 
 def get_config_manager() -> ConfigManager:
-    """Get the global configuration manager instance."""
+    # Get the global configuration manager instance.
     global _config_manager
     if _config_manager is None:
         _config_manager = ConfigManager()
@@ -239,5 +241,5 @@ def get_config_manager() -> ConfigManager:
 
 @lru_cache()
 def get_config() -> Dict[str, Any]:
-    """Get all configuration for current environment."""
+    # Get all configuration for current environment.
     return get_config_manager().get_all_config() 

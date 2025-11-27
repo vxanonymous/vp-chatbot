@@ -34,10 +34,36 @@ Object.defineProperty(import.meta, 'env', {
   },
 });
 
+// Mock window.URL.createObjectURL
+if (typeof window !== 'undefined' && window.URL) {
+  window.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+  window.URL.revokeObjectURL = vi.fn();
+}
+
+// Mock Worker for maplibre-gl
+global.Worker = vi.fn(() => ({
+  postMessage: vi.fn(),
+  terminate: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+}));
+
+// Mock ImageData for maplibre-gl
+global.ImageData = class ImageData {
+  constructor(data, width, height) {
+    this.data = data;
+    this.width = width;
+    this.height = height;
+  }
+};
+
 // Mock console methods to reduce noise in tests
 global.console = {
   ...console,
   error: vi.fn(),
   warn: vi.fn(),
   log: vi.fn(),
-}; 
+};
+
+// Mock scrollIntoView
+Element.prototype.scrollIntoView = vi.fn(); 

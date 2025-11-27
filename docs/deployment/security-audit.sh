@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Security Audit Script for Vacation Planning Chatbot
+# Security Audit Script for Vacation Planning System
 # This script performs comprehensive security checks on the application
 # 
 # NOTE: This script is designed for macOS systems only.
@@ -26,7 +26,7 @@ REPORT_FILE="$REPORT_DIR/security_audit_$TIMESTAMP.md"
 # Create report directory
 mkdir -p "$REPORT_DIR"
 
-echo -e "${BLUE}🔒 Starting Security Audit for Vacation Planning Chatbot${NC}"
+echo -e "${BLUE}🔒 Starting Security Audit for Vacation Planning System${NC}"
 echo -e "${BLUE}Report will be saved to: $REPORT_FILE${NC}"
 echo ""
 
@@ -34,12 +34,12 @@ echo ""
 cat > "$REPORT_FILE" << EOF
 # Security Audit Report
 **Generated:** $(date)
-**Project:** Vacation Planning Chatbot
+**Project:** Vacation Planning System
 **Audit Type:** Comprehensive Security Assessment
 
 ## Executive Summary
 
-This report contains the results of a comprehensive security audit performed on the Vacation Planning Chatbot application.
+This report contains the results of a comprehensive security audit performed on the Vacation Planning System application.
 
 ## Table of Contents
 1. [Dependency Security](#dependency-security)
@@ -381,7 +381,7 @@ cat >> "$REPORT_FILE" << EOF
 
 ## Conclusion
 
-This security audit provides a baseline assessment of the Vacation Planning Chatbot application. Regular security audits should be conducted to maintain security posture.
+This security audit provides a baseline assessment of the Vacation Planning System application. Regular security audits should be conducted to maintain security posture.
 
 **Next Steps:**
 1. Address all Critical and High severity findings

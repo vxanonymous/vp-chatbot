@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""
-Comprehensive Load Testing Script
-Addresses specific performance issues and provides detailed analysis.
-"""
+# Comprehensive Load Testing Script
+# Addresses specific performance issues and provides detailed analysis.
 
 import asyncio
 import aiohttp
@@ -31,7 +29,7 @@ DEFAULT_RAMP_UP = 10
 
 @dataclass
 class LoadTestScenario:
-    """Load test scenario configuration."""
+    # Load test scenario configuration.
     name: str
     num_users: int
     duration: int
@@ -41,14 +39,13 @@ class LoadTestScenario:
     description: str
 
 class ComprehensiveUserSimulator:
-    """Comprehensive user simulator with realistic behavior patterns."""
+    # Comprehensive user simulator with realistic behavior patterns.
     
     def __init__(self, user_id: int, session: aiohttp.ClientSession, config: LoadTestScenario):
         self.user_id = user_id
         self.session = session
         self.config = config
-        
-        # Use unique identifiers to avoid conflicts
+
         unique_id = str(uuid.uuid4())[:8]
         self.email = f"loadtest{user_id}_{unique_id}@example.com"
         self.password = f"Password{user_id}_{unique_id}123!"
@@ -67,10 +64,9 @@ class ComprehensiveUserSimulator:
         }
     
     async def make_request(self, method: str, url: str, operation_name: str, **kwargs) -> Tuple[bool, float, Optional[Dict]]:
-        """Make HTTP request with comprehensive error handling."""
+        # Make HTTP request with comprehensive error handling.
         start_time = time.time()
-        
-        # Set default timeout
+
         if 'timeout' not in kwargs:
             kwargs['timeout'] = aiohttp.ClientTimeout(total=self.config.request_timeout)
         
@@ -85,8 +81,7 @@ class ComprehensiveUserSimulator:
                     response_data = {"status": response.status}
                 
                 success = 200 <= response.status < 300
-                
-                # Record operation
+
                 self.stats["operations"].append({
                     "operation": operation_name,
                     "method": method,
@@ -133,7 +128,7 @@ class ComprehensiveUserSimulator:
             return False, response_time, None
     
     async def signup(self) -> bool:
-        """Sign up the user with comprehensive retry logic."""
+        # Sign up the user with comprehensive retry logic.
         max_retries = 3
         for attempt in range(max_retries):
             success, response_time, data = await self.make_request(
@@ -157,7 +152,7 @@ class ComprehensiveUserSimulator:
                 print(f"✅ User {self.user_id} signed up successfully")
                 return True
             elif data and data.get("status") == 422:
-                # User already exists, try login instead
+
                 print(f"⚠️  User {self.user_id} already exists, trying login")
                 return await self.login()
             else:
@@ -169,7 +164,7 @@ class ComprehensiveUserSimulator:
         return False
     
     async def login(self) -> bool:
-        """Login the user with comprehensive retry logic."""
+        # Login the user with comprehensive retry logic.
         max_retries = 3
         for attempt in range(max_retries):
             success, response_time, data = await self.make_request(
@@ -201,13 +196,13 @@ class ComprehensiveUserSimulator:
         return False
     
     def get_auth_headers(self) -> Dict[str, str]:
-        """Get authentication headers."""
+        # Get authentication headers.
         if self.access_token:
             return {"Authorization": f"Bearer {self.access_token}"}
         return {}
     
     async def create_conversation(self) -> bool:
-        """Create a new conversation with comprehensive retry logic."""
+        # Create a new conversation with comprehensive retry logic.
         if not self.access_token:
             return False
             
@@ -239,7 +234,7 @@ class ComprehensiveUserSimulator:
         return False
     
     async def send_chat_message(self, message: str) -> bool:
-        """Send a chat message with comprehensive retry logic."""
+        # Send a chat message with comprehensive retry logic.
         if not self.access_token:
             return False
             
@@ -273,7 +268,7 @@ class ComprehensiveUserSimulator:
         return False
     
     async def get_conversations(self) -> bool:
-        """Get user conversations with comprehensive retry logic."""
+        # Get user conversations with comprehensive retry logic.
         if not self.access_token:
             return False
             
@@ -303,20 +298,17 @@ class ComprehensiveUserSimulator:
         return False
     
     async def simulate_realistic_user_session(self, duration: int):
-        """Simulate a realistic user session with varied behavior patterns."""
+        # Simulate a realistic user session with varied behavior patterns.
         session_start = time.time()
-        
-        # Authentication phase
+
         if not await self.signup():
             print(f"❌ User {self.user_id} authentication failed")
             return
-        
-        # Create conversation
+
         if not await self.create_conversation():
             print(f"❌ User {self.user_id} conversation creation failed")
             return
-        
-        # Simulate realistic chat activity
+
         vacation_messages = [
             "I want to plan a vacation to Paris",
             "What are the best attractions to visit?",
@@ -329,44 +321,41 @@ class ComprehensiveUserSimulator:
             "What about food and restaurants?",
             "Is it safe for solo travelers?"
         ]
-        
-        # Simulate different user behavior patterns
+
         behavior_pattern = random.choice(["active", "moderate", "passive"])
         
         if behavior_pattern == "active":
-            message_interval = (2, 4)  # Active user
+            message_interval = (2, 4)
             conversation_frequency = 0.4
         elif behavior_pattern == "moderate":
-            message_interval = (4, 8)  # Moderate user
+            message_interval = (4, 8)
             conversation_frequency = 0.2
         else:
-            message_interval = (8, 15)  # Passive user
+            message_interval = (8, 15)
             conversation_frequency = 0.1
         
         message_index = 0
         last_conversation_check = 0
         
         while time.time() - session_start < duration:
-            # Send messages
+
             if message_index < len(vacation_messages):
                 await self.send_chat_message(vacation_messages[message_index])
                 message_index += 1
-            
-            # Check conversations occasionally
+
             current_time = time.time()
-            if current_time - last_conversation_check > 30:  # Check every 30 seconds
+            if current_time - last_conversation_check > 30:
                 if random.random() < conversation_frequency:
                     await self.get_conversations()
                     last_conversation_check = current_time
-            
-            # Random delay between actions
+
             delay = random.uniform(*message_interval)
             await asyncio.sleep(delay)
         
         print(f"✅ User {self.user_id} session completed ({behavior_pattern} behavior)")
 
 class ComprehensiveLoadTestRunner:
-    """Comprehensive load test runner with detailed monitoring and analysis."""
+    # Comprehensive load test runner with detailed monitoring and analysis.
     
     def __init__(self, scenario: LoadTestScenario):
         self.scenario = scenario
@@ -389,8 +378,8 @@ class ComprehensiveLoadTestRunner:
     
     @asynccontextmanager
     async def create_optimized_session(self):
-        """Create optimized HTTP session with connection pooling."""
-        # Configure connection pooling
+        # Create optimized HTTP session with connection pooling.
+
         connector = aiohttp.TCPConnector(
             limit=self.scenario.max_concurrent_connections,
             limit_per_host=min(50, self.scenario.max_concurrent_connections // 2),
@@ -399,8 +388,7 @@ class ComprehensiveLoadTestRunner:
             keepalive_timeout=30,
             enable_cleanup_closed=True
         )
-        
-        # Configure session
+
         timeout = aiohttp.ClientTimeout(
             total=self.scenario.request_timeout,
             connect=30,
@@ -423,7 +411,7 @@ class ComprehensiveLoadTestRunner:
             await session.close()
     
     async def run_load_test(self):
-        """Run the comprehensive load test."""
+        # Run the comprehensive load test.
         print(f"🚀 Starting comprehensive load test: {self.scenario.name}")
         print(f"📋 Description: {self.scenario.description}")
         print(f"👥 Users: {self.scenario.num_users}")
@@ -433,30 +421,25 @@ class ComprehensiveLoadTestRunner:
         print(f"⏰ Timeout: {self.scenario.request_timeout} seconds")
         
         self.results["start_time"] = datetime.now()
-        
-        # Start system monitoring
+
         monitoring_task = asyncio.create_task(self._monitor_system())
         
         async with self.create_optimized_session() as session:
-            # Create user simulators
+
             self.users = [ComprehensiveUserSimulator(i, session, self.scenario) for i in range(self.scenario.num_users)]
-            
-            # Start users with ramp-up
+
             tasks = []
             for i, user in enumerate(self.users):
                 delay = (i / self.scenario.num_users) * self.scenario.ramp_up
                 task = asyncio.create_task(self._start_user_with_delay(user, delay))
                 tasks.append(task)
-            
-            # Wait for all users to complete
+
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # Log any exceptions
+
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
                     print(f"❌ User {i} session failed with exception: {result}")
-        
-        # Stop system monitoring
+
         monitoring_task.cancel()
         try:
             await monitoring_task
@@ -469,13 +452,13 @@ class ComprehensiveLoadTestRunner:
         self._print_comprehensive_results()
     
     async def _monitor_system(self):
-        """Monitor system resources during the test."""
+        # Monitor system resources during the test.
         while True:
             self.system_monitor.record_metrics()
-            await asyncio.sleep(5)  # Record metrics every 5 seconds
+            await asyncio.sleep(5)
     
     async def _start_user_with_delay(self, user: ComprehensiveUserSimulator, delay: float):
-        """Start a user session after a delay."""
+        # Start a user session after a delay.
         await asyncio.sleep(delay)
         try:
             await user.simulate_realistic_user_session(self.scenario.duration)
@@ -483,16 +466,15 @@ class ComprehensiveLoadTestRunner:
             print(f"❌ User {user.user_id} session error: {e}")
     
     def _calculate_comprehensive_results(self):
-        """Calculate comprehensive test results with detailed analysis."""
-        # Aggregate user statistics
+        # Calculate comprehensive test results with detailed analysis.
+
         for i, user in enumerate(self.users):
             self.results["total_requests"] += user.stats["requests_made"]
             self.results["successful_requests"] += user.stats["successful_requests"]
             self.results["failed_requests"] += user.stats["failed_requests"]
             self.results["total_response_time"] += user.stats["total_response_time"]
             self.results["response_times"].extend(user.stats["response_times"])
-            
-            # User-specific statistics
+
             self.results["user_statistics"][f"user_{i}"] = {
                 "requests_made": user.stats["requests_made"],
                 "successful_requests": user.stats["successful_requests"],
@@ -501,8 +483,7 @@ class ComprehensiveLoadTestRunner:
                 "avg_response_time": statistics.mean(user.stats["response_times"]) if user.stats["response_times"] else 0,
                 "errors": user.stats["errors"]
             }
-        
-        # Operation breakdown
+
         all_operations = []
         for user in self.users:
             all_operations.extend(user.stats["operations"])
@@ -528,8 +509,7 @@ class ComprehensiveLoadTestRunner:
                 operation_types[op_type]["failed"] += 1
                 if "error" in op:
                     operation_types[op_type]["errors"].append(op["error"])
-        
-        # Calculate statistics for each operation type
+
         for op_type, data in operation_types.items():
             data["success_rate"] = (data["successful"] / data["count"]) * 100 if data["count"] > 0 else 0
             data["avg_response_time"] = statistics.mean(data["response_times"]) if data["response_times"] else 0
@@ -537,8 +517,7 @@ class ComprehensiveLoadTestRunner:
             data["min_response_time"] = min(data["response_times"]) if data["response_times"] else 0
         
         self.results["operation_breakdown"] = operation_types
-        
-        # Error analysis
+
         all_errors = []
         for user in self.users:
             all_errors.extend(user.stats["errors"])
@@ -550,7 +529,7 @@ class ComprehensiveLoadTestRunner:
         self.results["error_analysis"] = error_counts
     
     def _print_comprehensive_results(self):
-        """Print comprehensive load test results."""
+        # Print comprehensive load test results.
         print("\n" + "="*80)
         print("📊 COMPREHENSIVE LOAD TEST RESULTS")
         print("="*80)
@@ -583,8 +562,7 @@ class ComprehensiveLoadTestRunner:
             
             if len(self.results["response_times"]) > 1:
                 print(f"   Standard Deviation: {statistics.stdev(self.results['response_times']):.3f}s")
-            
-            # Calculate percentiles
+
             sorted_times = sorted(self.results["response_times"])
             p95_index = int(len(sorted_times) * 0.95)
             p99_index = int(len(sorted_times) * 0.99)
@@ -602,24 +580,21 @@ class ComprehensiveLoadTestRunner:
         print(f"   Average response time: {self.results['total_response_time'] / self.results['total_requests']:.3f}s")
         
         print()
-        
-        # Operation breakdown
+
         print("🔍 OPERATION BREAKDOWN:")
         for op_type, data in self.results["operation_breakdown"].items():
             status = "✅" if data["success_rate"] > 90 else "⚠️" if data["success_rate"] > 80 else "❌"
             print(f"   {status} {op_type}: {data['count']} requests, {data['success_rate']:.1f}% success, {data['avg_response_time']:.3f}s avg")
         
         print()
-        
-        # Error analysis
+
         if self.results["error_analysis"]:
             print("❌ ERROR ANALYSIS:")
             for error, count in sorted(self.results["error_analysis"].items(), key=lambda x: x[1], reverse=True):
                 print(f"   {error}: {count} occurrences")
         
         print()
-        
-        # System metrics
+
         if self.results["system_metrics"]:
             print("💻 SYSTEM METRICS:")
             metrics = self.results["system_metrics"]
@@ -627,8 +602,7 @@ class ComprehensiveLoadTestRunner:
             print(f"   Memory Usage (avg/max): {metrics.get('memory_avg', 0):.1f}% / {metrics.get('memory_max', 0):.1f}%")
         
         print("="*80)
-        
-        # Performance assessment
+
         success_rate = (self.results["successful_requests"] / self.results["total_requests"]) * 100 if self.results["total_requests"] > 0 else 0
         avg_response_time = statistics.mean(self.results["response_times"]) if self.results["response_times"] else 0
         
@@ -654,14 +628,14 @@ class ComprehensiveLoadTestRunner:
         print("="*80)
 
 class SystemMonitor:
-    """Monitor system resources during load testing."""
+    # Monitor system resources during load testing.
     
     def __init__(self):
         self.start_time = time.time()
         self.metrics = []
     
     def record_metrics(self):
-        """Record current system metrics."""
+        # Record current system metrics.
         try:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
@@ -679,7 +653,7 @@ class SystemMonitor:
             print(f"⚠️  System monitoring error: {e}")
     
     def get_summary(self) -> Dict[str, Any]:
-        """Get system metrics summary."""
+        # Get system metrics summary.
         if not self.metrics:
             return {}
         
@@ -744,13 +718,13 @@ TEST_SCENARIOS = {
 }
 
 async def run_comprehensive_load_test(scenario: LoadTestScenario):
-    """Run comprehensive load test with the given scenario."""
+    # Run comprehensive load test with the given scenario.
     runner = ComprehensiveLoadTestRunner(scenario)
     await runner.run_load_test()
     return runner.results
 
 def main():
-    """Main function to run comprehensive load tests."""
+    # Main function to run comprehensive load tests.
     parser = argparse.ArgumentParser(description="Comprehensive Multi-User Load Testing Script")
     parser.add_argument("--scenario", choices=list(TEST_SCENARIOS.keys()), default="baseline",
                        help="Test scenario to run")
@@ -761,11 +735,9 @@ def main():
     parser.add_argument("--timeout", type=int, help="Override request timeout")
     
     args = parser.parse_args()
-    
-    # Get base scenario
+
     scenario = TEST_SCENARIOS[args.scenario]
-    
-    # Override with custom parameters if provided
+
     if args.users:
         scenario.num_users = args.users
     if args.duration:
@@ -777,7 +749,7 @@ def main():
     if args.timeout:
         scenario.request_timeout = args.timeout
     
-    print("🛡️  Vacation Planning Chatbot - Comprehensive Multi-User Load Testing")
+    print("🛡️  Vacation Planning System - Comprehensive Multi-User Load Testing")
     print("="*80)
     print(f"🌐 Base URL: {BASE_URL}")
     print(f"🎯 Scenario: {scenario.name}")
@@ -788,8 +760,7 @@ def main():
     print(f"🔧 Max Connections: {scenario.max_concurrent_connections}")
     print(f"⏰ Timeout: {scenario.request_timeout} seconds")
     print("="*80)
-    
-    # Check if server is running
+
     print("🔍 Checking if server is running...")
     
     async def check_server():
@@ -805,23 +776,19 @@ def main():
         except Exception as e:
             print(f"❌ Cannot connect to server: {e}")
             return False
-    
-    # Run the test
+
     async def main_async():
         if await check_server():
             results = await run_comprehensive_load_test(scenario)
-            
-            # Save results
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"load_test_results_{scenario.name.lower().replace(' ', '_')}_{timestamp}.json"
-            
-            # Convert datetime objects to strings for JSON serialization
+
             def convert_datetime(obj):
                 if isinstance(obj, datetime):
                     return obj.isoformat()
                 return obj
-            
-            # Convert results to JSON-serializable format
+
             json_results = json.loads(json.dumps(results, default=convert_datetime))
             
             with open(filename, 'w') as f:

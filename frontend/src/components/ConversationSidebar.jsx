@@ -15,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 
 const ConversationSidebar = ({ 
+
   isOpen, 
   onToggle, 
   conversations = [], 
@@ -32,24 +33,27 @@ const ConversationSidebar = ({
   const [editTitle, setEditTitle] = useState('');
 
   const handleSelectConversation = (conv) => {
+
     if (disabled) {
-      return; // Don't let them switch conversations while we're busy
+      return;
     }
     const id = conv.id || conv._id;
     navigate(`/chat/${id}`);
-    // On mobile, close the sidebar after they pick a conversation
+
     if (window.innerWidth < 768) {
       onToggle();
     }
   };
 
   const handleEditStart = (conv) => {
+
     const id = conv.id || conv._id;
     setEditingId(id);
     setEditTitle(conv.title);
   };
 
   const handleEditSave = async () => {
+
     if (!editTitle.trim()) {
       addNotification('Title cannot be empty', 'error');
       return;
@@ -60,24 +64,27 @@ const ConversationSidebar = ({
       setEditingId(null);
       setEditTitle('');
     } catch (error) {
-      // If something goes wrong, just cancel the edit
+
       setEditingId(null);
       setEditTitle('');
     }
   };
 
   const handleEditCancel = () => {
+
     setEditingId(null);
     setEditTitle('');
   };
 
   const handleDelete = async (e, conv) => {
+
     e.stopPropagation();
     const id = conv.id || conv._id;
     await onDeleteConversation(id);
   };
 
   const formatTime = (dateString) => {
+
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
@@ -86,8 +93,9 @@ const ConversationSidebar = ({
       
       const now = new Date();
       const diffInHours = (now - date) / (1000 * 60 * 60);
+
       
-      // Show how long ago the conversation was updated
+
       if (diffInHours < 1) {
         const diffInMinutes = Math.floor((now - date) / (1000 * 60));
         return diffInMinutes <= 1 ? 'Just now' : `${diffInMinutes}m ago`;

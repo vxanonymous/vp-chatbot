@@ -5,36 +5,41 @@ import VacationSummary from './VacationSummary';
 import { sendMessage } from '../services/api';
 
 /**
+
  * Chat Interface Component
+
  * 
+
  * This is the main chat interface - it handles all the conversation stuff,
+
  * message sending, and user interactions for planning vacations.
+
  */
 
+
 const ChatInterface = () => {
-  // Keep track of what's happening in the chat
+
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [vacationSummary, setVacationSummary] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   
-  // Refs for scrolling to the bottom and canceling requests
   const messagesEndRef = useRef(null);
   const currentRequestRef = useRef(null);
 
-  // Scroll to the bottom of the chat so they can see the latest message
   const scrollToBottom = () => {
+
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Scroll down whenever we get new messages
   useEffect(() => {
+
     scrollToBottom();
   }, [messages]);
 
-  // Set up the initial welcome message when the component loads
   useEffect(() => {
+
     setMessages([
       {
         role: 'assistant',
@@ -45,12 +50,11 @@ const ChatInterface = () => {
   }, []);
 
   const handleSendMessage = async (message) => {
-    // Stop any request that's still running so we don't get conflicts
+
     if (currentRequestRef.current) {
       currentRequestRef.current.cancel();
     }
 
-    // Add their message to the chat
     const userMessage = {
       role: 'user',
       content: message,
@@ -59,13 +63,11 @@ const ChatInterface = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Remember which conversation we're in when we send this message
     const requestConversationId = conversationId;
 
     try {
       console.log('Sending message:', message, 'Conversation ID:', requestConversationId);
       
-      // Create a cancelable request
       const controller = new AbortController();
       currentRequestRef.current = controller;
       
@@ -75,18 +77,15 @@ const ChatInterface = () => {
       
       console.log('Received response:', response);
       
-      // Check if conversation has changed since we sent the request
       if (requestConversationId !== conversationId) {
         console.log('Conversation changed during request, ignoring response');
         return;
       }
       
-      // Update conversation ID if new
       if (!conversationId) {
         setConversationId(response.conversation_id);
       }
 
-      // Add assistant response
       const assistantMessage = {
         role: 'assistant',
         content: response.response,
@@ -94,7 +93,6 @@ const ChatInterface = () => {
       };
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Update vacation summary and suggestions
       if (response.vacation_summary) {
         setVacationSummary(response.vacation_summary);
       }
@@ -102,7 +100,6 @@ const ChatInterface = () => {
         setSuggestions(response.suggestions);
       }
     } catch (error) {
-      // Don't show error if request was cancelled
       if (error.name === 'AbortError' || error.message.includes('canceled')) {
         console.log('Request was cancelled');
         return;
@@ -116,7 +113,6 @@ const ChatInterface = () => {
         data: error.response?.data
       });
       
-      // Only show error if conversation hasn't changed
       if (requestConversationId === conversationId) {
         const errorMessage = {
           role: 'assistant',
@@ -127,7 +123,6 @@ const ChatInterface = () => {
         setMessages(prev => [...prev, errorMessage]);
       }
     } finally {
-      // Only clear loading if conversation hasn't changed
       if (requestConversationId === conversationId) {
         setIsLoading(false);
       }
@@ -136,12 +131,13 @@ const ChatInterface = () => {
   };
 
   const handleSuggestionClick = (suggestion) => {
+
     handleSendMessage(suggestion);
   };
 
-  // Cleanup function for component unmount
   useEffect(() => {
     return () => {
+
       if (currentRequestRef.current) {
         currentRequestRef.current.cancel();
       }

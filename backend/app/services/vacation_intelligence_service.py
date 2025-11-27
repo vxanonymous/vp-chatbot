@@ -1,24 +1,22 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import logging
 import re
+import json
+from app.domains.vacation.config_loader import vacation_config_loader
 
 logger = logging.getLogger(__name__)
 
 
 class VacationIntelligenceService:
-    """
-    Helps understand what users want for their vacation by reading between the lines.
+    # Helps understand what users want for their vacation by reading between the lines.
+    # are in planning their trip, and gives smart suggestions based on what we learn.
     
-    This service looks at what users say to figure out their travel style, where they
-    are in planning their trip, and gives smart suggestions based on what we learn.
-    """
-    
-    def __init__(self):
+    def __init__(self, openai_service=None):
         logger.info("Started up the vacation intelligence service")
         self.stage_keywords = self._init_stage_keywords()
+        self.openai_service = openai_service
         
-    def _init_stage_keywords(self) -> Dict[str, Dict[str, List[str]]]:
-        """Set up words that help us figure out where users are in planning their trip."""
+    def _default_stage_keywords(self) -> Dict[str, Dict[str, List[str]]]:
         return {
             "exploring": {
                 "positive": [
@@ -69,12 +67,24 @@ class VacationIntelligenceService:
             }
         }
     
+    def _init_stage_keywords(self) -> Dict[str, Dict[str, List[str]]]:
+        # Set up words that help us figure out where users are in planning their trip.
+        default_keywords = self._default_stage_keywords()
+        try:
+            config = vacation_config_loader.load_keywords()
+            stage_keywords = config.get("stage_keywords")
+            if isinstance(stage_keywords, dict) and stage_keywords:
+                return stage_keywords
+        except Exception as exc:
+            logger.warning("Falling back to default stage keywords: %s", exc)
+        return default_keywords
+    
     async def analyze_preferences(
         self, 
         messages: List[Dict], 
         current_preferences: Optional[Dict]
     ) -> Dict:
-        """Look at what the user has been saying to understand what they want for their vacation."""
+        # Look at what the user has been saying to understand what they want for their vacation.
         insights = {
             "detected_interests": [],
             "budget_indicators": [],
@@ -102,8 +112,37 @@ class VacationIntelligenceService:
         # Find out what kind of vacation they're interested in
         insights["detected_interests"] = self._detect_interests(full_text)
         
+        # Capture explicit budget amounts before classification
+        budget_amount_info = self._extract_budget_amount(full_text)
+        if budget_amount_info:
+            insights["budget_amount"] = budget_amount_info["formatted"]
+        
         # See what destinations they've mentioned
-        insights["mentioned_destinations"] = self._extract_destinations(user_messages)
+        # Try AI extraction first, fallback to known list
+        ai_destinations = await self._extract_destinations_with_ai(user_messages) if self.openai_service else None
+        
+        # Post-process AI-extracted destinations through alias mapping and filter verbs
+        common_verbs = {
+            "visit", "go", "travel", "trip", "vacation", "holiday", "journey",
+            "explore", "see", "tour", "tourist", "tourists", "traveling", "travelling",
+            "plan", "planning", "want", "wants", "would", "like", "love", "dream",
+            "thinking", "considering", "interested", "looking", "hoping", "wishing"
+        }
+        
+        if ai_destinations:
+            processed_destinations = []
+            for dest in ai_destinations:
+                dest_lower = dest.lower().strip()
+                # Skip common verbs
+                if dest_lower in common_verbs:
+                    logger.debug(f"Filtered out verb '{dest}' from AI-extracted destinations")
+                    continue
+                
+                processed_destinations.append(dest)
+            
+            insights["mentioned_destinations"] = processed_destinations if processed_destinations else self._extract_destinations(user_messages)
+        else:
+            insights["mentioned_destinations"] = self._extract_destinations(user_messages)
         
         # See how ready they are to make decisions
         insights["decision_readiness"] = self._calculate_decision_readiness(
@@ -113,7 +152,7 @@ class VacationIntelligenceService:
         )
         
         # Look for budget clues
-        insights["budget_indicators"] = self._detect_budget_level(full_text)
+        insights["budget_indicators"] = self._detect_budget_level(full_text, budget_amount_info)
         
         # Find any concerns they might have
         insights["concerns"] = self._detect_concerns(full_text)
@@ -128,7 +167,7 @@ class VacationIntelligenceService:
         user_messages: List[Dict], 
         preferences: Optional[Dict]
     ) -> Dict:
-        """Figure out where the user is in planning their trip."""
+        # Figure out where the user is in planning their trip.
         # Debug logging removed for production
         
         stage_scores = {
@@ -180,7 +219,6 @@ class VacationIntelligenceService:
                 stage_scores["finalizing"] *= 1.2
         
         # Look for planning clues in the most recent message
-        # Only check the latest message to avoid getting confused by old conversation
         explicit_stage_override = None
         if user_messages:
             latest_message = user_messages[-1]["content"]
@@ -246,7 +284,7 @@ class VacationIntelligenceService:
         return result
     
     def _detect_interests(self, text: str) -> List[str]:
-        """See what kind of vacation activities they're interested in."""
+        # See what kind of vacation activities they're interested in.
         interest_patterns = {
             "adventure": {
                 "keywords": ["hiking", "climbing", "diving", "extreme", "adventure", 
@@ -308,48 +346,180 @@ class VacationIntelligenceService:
         return detected_interests
     
     def _extract_destinations(self, messages: List[Dict]) -> List[str]:
-        """Find places they've mentioned in their messages."""
+        # Find places they've mentioned in their messages.
         destinations = []
-        # Look for common ways people mention places
-        destination_patterns = [
-            r"(?:to|visit|go to|travel to|trip to|vacation in|holiday in)\s+([A-Z][a-zA-Z\s]+?)(?:\.|,|!|\?|$)",
-            r"(?:^|[\s])([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*?)(?:\s+is\s+|\.|\?|!|$)",
-            r"(?:considering|thinking about|interested in)\s+([A-Z][a-zA-Z\s]+?)(?:\.|,|!|\?|$)"
-        ]
-        for msg in messages:
-            text = msg["content"]
-            # Look for lists of cities (like "Paris, Tokyo, and New York")
-            city_list_matches = re.findall(r"([A-Z][a-zA-Z]+(?:,\s*[A-Z][a-zA-Z]+)+(?:,?\s*and\s*[A-Z][a-zA-Z]+)?)", text)
-            for match in city_list_matches:
-                # Split by comma and 'and'
-                parts = re.split(r",\s*|\s+and\s+", match)
-                for part in parts:
-                    city = part.strip()
-                    if city and city not in destinations:
+        
+        # Try to match against known destinations list from config
+        try:
+            known_destinations = vacation_config_loader.load_destinations()
+            if known_destinations:
+                for msg in messages:
+                    if msg.get("role") and msg["role"] != "user":
+                        continue
+                    text_lower = msg.get("content", "").lower()
+                    original_text = msg.get("content", "")
+                    
+                    # Check each known destination
+                    for known_dest in known_destinations:
+                        if known_dest.lower() in text_lower:
+                            start_idx = text_lower.find(known_dest.lower())
+                            if start_idx != -1:
+                                end_idx = start_idx + len(known_dest)
+                                matched_text = original_text[start_idx:end_idx]
+                                if matched_text and matched_text not in destinations:
+                                    destinations.append(matched_text)
+                                    logger.debug(f"Found destination '{matched_text}' from known list")
+        except Exception as e:
+            logger.warning(f"Error loading known destinations: {e}")
+        
+        if destinations:
+            logger.info(f"Extracted {len(destinations)} destinations from known list/aliases: {destinations}")
+        
+        if not destinations:
+            logger.debug("Attempting regex/geocode patterns to find additional destinations")
+            destination_patterns = [
+                r"(?:to|visit|go to|travel to|trip to|vacation in|holiday in|plan.*?trip to|want.*?go to)\s+([A-Z][a-zA-Z\s]+?)(?:\.|,|!|\?|$|\s)",
+                r"(?:^|[\s])([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*?)(?:\s+is\s+|\.|\?|!|$)",
+                r"(?:considering|thinking about|interested in|planning)\s+([A-Z][a-zA-Z\s]+?)(?:\.|,|!|\?|$)"
+            ]
+            
+            for msg in messages:
+                if msg.get("role") and msg["role"] != "user":
+                    continue
+                text = msg.get("content", "")
+                # Look for lists of cities
+                city_list_matches = re.findall(r"([A-Z][a-zA-Z]+(?:,\s*[A-Z][a-zA-Z]+)+(?:,?\s*and\s*[A-Z][a-zA-Z]+)?)", text)
+                for match in city_list_matches:
+                    # Split by comma and 'and'
+                    parts = re.split(r",\s*|\s+and\s+", match)
+                    for part in parts:
+                        city = part.strip()
+                        if city and city not in destinations:
+                            destinations.append(city)
+                # Try the other patterns
+                for pattern in destination_patterns:
+                    matches = re.findall(pattern, text, re.IGNORECASE)
+                    for match in matches:
+                        dest = match.strip() if isinstance(match, str) else match[0].strip() if match else ""
+                        if (dest and len(dest) > 2 and 
+                            dest not in ["I", "We", "The", "This", "That", "My", "Our", "Plan", "Want", "Trip"] and
+                            not dest.startswith("I ") and
+                            not any(word in dest.lower() for word in ["plan", "want", "trip", "vacation", "holiday"])):
+                            if dest not in destinations:
+                                destinations.append(dest)
+                # Last resort: look for any capitalized words (probably city/country names)
+                fallback_cities = re.findall(r"\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\b", text)
+                for city in fallback_cities:
+                    if (city not in destinations and 
+                        city not in ["I", "We", "The", "This", "That", "My", "Our", "Plan", "Want", "Trip", "Vacation", "Holiday"] and
+                        len(city) > 2):
                         destinations.append(city)
-            # Try the other patterns
-            for pattern in destination_patterns:
-                matches = re.findall(pattern, text)
-                for match in matches:
-                    dest = match.strip()
-                    if (len(dest) > 2 and 
-                        dest not in ["I", "We", "The", "This", "That", "My", "Our"] and
-                        not dest.startswith("I ")):
-                        if dest not in destinations:
-                            destinations.append(dest)
-            # Last resort: look for any capitalized words (probably city names)
-            fallback_cities = re.findall(r"\b([A-Z][a-zA-Z]+)\b", text)
-            for city in fallback_cities:
-                if city not in destinations and city not in ["I", "We", "The", "This", "That", "My", "Our"]:
-                    destinations.append(city)
-        # Get rid of duplicates but keep the order
+        
+        # Filter out common verbs and non-destination words
+        common_verbs = {
+            "visit", "go", "travel", "trip", "vacation", "holiday", "journey",
+            "explore", "see", "tour", "tourist", "tourists", "traveling", "travelling",
+            "plan", "planning", "want", "wants", "would", "like", "love", "dream",
+            "thinking", "considering", "interested", "looking", "hoping", "wishing"
+        }
+        
+        # Get rid of duplicates and filter out verbs, but keep the order
         seen = set()
         unique_destinations = []
         for dest in destinations:
-            if dest.lower() not in seen:
-                seen.add(dest.lower())
-                unique_destinations.append(dest)
+            dest_lower = dest.lower().strip()
+            # Skip if it's a common verb or already seen
+            if dest_lower in common_verbs or dest_lower in seen:
+                continue
+            seen.add(dest_lower)
+            unique_destinations.append(dest)
+        
+        if unique_destinations:
+            logger.info(f"Extracted {len(unique_destinations)} destinations via regex: {unique_destinations}")
+        else:
+            logger.warning(f"No destinations extracted from messages: {[m.get('content', '')[:50] for m in messages]}")
+        
         return unique_destinations
+    
+    async def _extract_destinations_with_ai(self, messages: List[Dict]) -> Optional[List[str]]:
+        # Use AI to extract destinations from user messages
+        if not self.openai_service or not self.openai_service.client:
+            logger.debug("OpenAI service not available, skipping AI extraction")
+            return None
+        
+        try:
+            # Combine user messages into a single text
+            user_text = " ".join([msg.get("content", "") for msg in messages if msg.get("role") == "user"])
+            if not user_text.strip():
+                return None
+            
+            # Create a simple prompt for destination extraction
+            extraction_prompt = f"""Extract all travel destinations (countries, cities, regions, landmarks) mentioned in the following user message. 
+Important: 
+- When extracting city names, also include the country name if you know it (e.g., "Danang" should include "Vietnam", "Paris" should include "France").
+- For ambiguous region names (like "Victoria" which could be Australia, Canada, or other places), use context clues from the conversation to determine the most likely location, or include both the region and country if context is unclear.
+- Return ONLY a JSON array of destination names, nothing else. Do NOT include verbs like "visit", "go", "travel", "trip", etc.
+
+User message: "{user_text}"
+
+Return format: ["destination1", "destination2", "country_name", ...]
+If no destinations found, return: []
+
+Examples:
+- User: "I want to visit Danang" → ["Danang", "Vietnam"]
+- User: "Paris sounds nice" → ["Paris", "France"]
+- User: "Tokyo and Kyoto" → ["Tokyo", "Kyoto", "Japan"]
+- User: "I'm going to Italy" → ["Italy"]
+- User: "Thinking about Victoria" → ["Victoria, Australia"] (if context suggests Australia) or ["Victoria"] (if context is unclear)
+- "I want to visit Bangladesh" → ["Bangladesh"]
+- "Planning a trip to Paris and Tokyo" → ["Paris", "France", "Tokyo", "Japan"]
+- "Thinking about Vietnam or Thailand" → ["Vietnam", "Thailand"]
+- "I want to visit Taj Mahal" → ["Taj Mahal", "Agra", "India"]
+- "No specific place yet" → []
+"""
+            
+            # Make a quick API call for extraction
+            response = self.openai_service.client.chat.completions.create(
+                model=self.openai_service.model,
+                messages=[
+                    {"role": "system", "content": "You are a travel destination extraction assistant. Extract destinations from user messages and return only a JSON array."},
+                    {"role": "user", "content": extraction_prompt}
+                ],
+                temperature=0.1,
+                max_tokens=200
+            )
+            
+            content = response.choices[0].message.content.strip()
+            
+            # Try to parse JSON from the response
+            # Handle cases where response might have markdown code blocks
+            if content.startswith("```"):
+                # Extract JSON from code block
+                lines = content.split("\n")
+                json_start = next((i for i, line in enumerate(lines) if "[" in line), None)
+                if json_start is not None:
+                    json_end = next((i for i, line in enumerate(lines[json_start:], json_start) if "]" in line), None)
+                    if json_end is not None:
+                        content = "\n".join(lines[json_start:json_end+1])
+            
+            # Remove any markdown formatting
+            content = content.replace("```json", "").replace("```", "").strip()
+            
+            destinations = json.loads(content)
+            
+            if isinstance(destinations, list) and destinations:
+                logger.info(f"AI extracted destinations: {destinations}")
+                return destinations
+            else:
+                logger.debug("AI found no destinations")
+                return None
+                
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse AI extraction response as JSON: {e}, content: {content[:100] if 'content' in locals() else 'N/A'}")
+            return None
+        except Exception as e:
+            logger.warning(f"AI destination extraction failed: {e}, falling back to regex")
+            return None
     
     def _calculate_decision_readiness(
         self, 
@@ -357,7 +527,7 @@ class VacationIntelligenceService:
         message_count: int,
         mentioned_destinations: List[str]
     ) -> float:
-        """See how ready they are to make decisions about their trip."""
+        # See how ready they are to make decisions about their trip.
         readiness_score = 0.0
         
         if not preferences:
@@ -380,8 +550,56 @@ class VacationIntelligenceService:
         
         return min(readiness_score, 1.0)
     
-    def _detect_budget_level(self, text: str) -> List[str]:
-        """See what kind of budget they're thinking about."""
+    def _categorize_budget_amount(self, amount: int) -> str:
+        if amount <= 1500:
+            return "budget"
+        if amount <= 5000:
+            return "moderate"
+        return "luxury"
+    
+    def _extract_budget_amount(self, text: str) -> Optional[Dict[str, Any]]:
+        currency_patterns = [
+            r'(?P<symbol>[$€£])\s*(?P<amount>[\d,]+)',
+            r'(?P<currency>usd|eur|gbp|cad|aud|sgd|inr)\s*(?P<amount>[\d,]+)',
+            r'(?P<amount>[\d,]+)\s*(?P<currency>usd|eur|gbp|cad|aud|sgd|inr|dollars|euros|pounds|bucks)'
+        ]
+        symbol_map = {
+            "$": "$",
+            "€": "€",
+            "£": "£",
+            "usd": "$",
+            "dollars": "$",
+            "bucks": "$",
+            "eur": "€",
+            "euros": "€",
+            "gbp": "£",
+            "pounds": "£",
+            "cad": "$",
+            "aud": "$",
+            "sgd": "$",
+            "inr": "₹"
+        }
+        for pattern in currency_patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                amount_str = match.group("amount")
+                digits = re.sub(r"[^\d]", "", amount_str)
+                if not digits:
+                    continue
+                amount_value = int(digits)
+                raw_currency = match.groupdict().get("symbol") or match.groupdict().get("currency")
+                currency_key = raw_currency.lower() if isinstance(raw_currency, str) else raw_currency
+                symbol = symbol_map.get(currency_key, "$")
+                formatted = f"{symbol}{amount_value:,.0f}"
+                return {
+                    "amount": amount_value,
+                    "symbol": symbol,
+                    "formatted": formatted
+                }
+        return None
+    
+    def _detect_budget_level(self, text: str, amount_info: Optional[Dict[str, Any]] = None) -> List[str]:
+        # See what kind of budget they're thinking about.
         budget_indicators = []
         
         budget_patterns = {
@@ -403,6 +621,14 @@ class VacationIntelligenceService:
             }
         }
         
+        if amount_info is None:
+            amount_info = self._extract_budget_amount(text)
+        
+        if amount_info and amount_info.get("amount"):
+            category = self._categorize_budget_amount(amount_info["amount"])
+            if category:
+                budget_indicators.append(category)
+        
         for level, patterns in budget_patterns.items():
             # Check keywords
             if any(keyword in text for keyword in patterns["keywords"]):
@@ -416,10 +642,15 @@ class VacationIntelligenceService:
         if len(budget_indicators) > 1 and "ultra_budget" in budget_indicators:
             budget_indicators = [b for b in budget_indicators if b != "ultra_budget"]
         
-        return list(set(budget_indicators))  # Get rid of duplicates
+        unique_indicators: List[str] = []
+        for indicator in budget_indicators:
+            if indicator not in unique_indicators:
+                unique_indicators.append(indicator)
+        
+        return unique_indicators
     
     def _detect_concerns(self, text: str) -> List[str]:
-        """Find any worries or concerns they might have."""
+        # Find any worries or concerns they might have.
         concerns = []
         
         concern_patterns = {
@@ -442,7 +673,7 @@ class VacationIntelligenceService:
         return list(set(concerns))
     
     def _detect_experience_level(self, text: str) -> str:
-        """See how experienced they are with travel."""
+        # See how experienced they are with travel.
         experience_indicators = {
             "beginner": [
                 "first time", "never been", "new to travel", "nervous about",
@@ -469,7 +700,7 @@ class VacationIntelligenceService:
         conversation_state: Dict,
         last_message: str
     ) -> List[str]:
-        """Come up with helpful suggestions based on what the user is thinking about."""
+        # Come up with helpful suggestions based on what the user is thinking about.
         suggestions = []
         stage = conversation_state.get("decision_stage", "exploring")
         confidence = conversation_state.get("stage_confidence", 0)
@@ -597,7 +828,7 @@ class VacationIntelligenceService:
         insights: Dict,
         message_count: int
     ) -> List[Dict]:
-        """Give them helpful recommendations based on what we know about them."""
+        # Give them helpful recommendations based on what we know about them.
         recommendations = []
         
         stage = insights.get("decision_stage", "exploring")
@@ -729,7 +960,7 @@ class VacationIntelligenceService:
                           "What would you like to focus on first?"
             })
         
-        # Make sure we always give them something helpful
+        # Ensure we provide helpful recommendations
         if not recommendations:
             recommendations.append({
                 "type": "general_guidance",

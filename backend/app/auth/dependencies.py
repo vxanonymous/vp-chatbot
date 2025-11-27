@@ -1,21 +1,15 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from app.auth.jwt_handler import decode_access_token
 from app.models.user import TokenData
 
 security = HTTPBearer()
 
-
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> TokenData:
-    """
-    Extract and validate current user from JWT token.
-    
-    Decodes the JWT token and returns user data if valid.
-    Raises HTTP 401 if token is invalid or missing user information.
-    """
+    # Extract and validate current user from JWT token
     token = credentials.credentials
-    
-    # Decode and validate the token
+
     payload = decode_access_token(token)
     if payload is None:
         raise HTTPException(
@@ -23,8 +17,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    # Extract user information from token
+
     user_id = payload.get("sub")
     email = payload.get("email")
     

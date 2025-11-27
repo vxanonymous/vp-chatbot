@@ -1,0 +1,80 @@
+{
+  "stages": {
+    "exploring": {
+      "positive": [
+        "thinking about", "considering", "wondering", "ideas", "suggestions",
+        "inspire", "options", "possibilities", "what about", "how about",
+        "somewhere", "anywhere", "dream", "always wanted", "bucket list"
+      ],
+      "questions": [
+        "where should", "where can", "what destinations", "any recommendations",
+        "suggest some places", "what do you think"
+      ]
+    },
+    "comparing": {
+      "positive": [
+        "vs", "versus", "or", "between", "compare", "comparison",
+        "which is better", "difference between", "pros and cons",
+        "advantages", "disadvantages", "rather", "instead of"
+      ],
+      "questions": [
+        "which one", "what's better", "should i choose", "help me decide"
+      ]
+    },
+    "planning": {
+      "positive": [
+        "itinerary", "schedule", "plan", "days in", "nights in",
+        "what to do", "activities", "must see", "must do", "route",
+        "transportation", "getting around", "where to stay", "neighborhoods",
+        "july", "august", "september", "october", "november", "december",
+        "january", "february", "march", "april", "may", "june",
+        "days", "weeks", "months", "duration", "length", "time",
+        "budget", "cost", "price", "money", "dollars", "euros",
+        "specific", "detailed", "exact", "precise", "definite"
+      ],
+      "questions": [
+        "how many days", "what should i do", "where to stay", "how to get",
+        "how much will it cost", "what's the budget", "when should i go"
+      ]
+    },
+    "finalizing": {
+      "positive": [
+        "book", "booking", "reserve", "reservation", "when to book",
+        "best time to book", "finalize", "decided", "going to",
+        "will be traveling", "confirmed", "tickets", "visa"
+      ],
+      "questions": [
+        "how to book", "where to book", "when should i book", "what documents"
+      ]
+    }
+  },
+  "travel_styles": {
+    "adventure": ["hiking", "outdoor", "active", "exploring", "adventure"],
+    "relaxation": ["beach", "spa", "peaceful", "quiet", "relax", "relaxation"],
+    "cultural": ["museums", "history", "art", "architecture", "cultural", "culture"],
+    "family": ["family", "kids", "children", "family-friendly"],
+    "romantic": ["romantic", "honeymoon", "couple", "romance"],
+    "business": ["business", "work", "conference", "meeting"],
+    "foodie": ["food", "cuisine", "restaurant", "dining", "foodie", "cooking"],
+    "luxury": ["luxury", "premium", "exclusive", "splurge", "five star"],
+    "budget": ["budget", "cheap", "affordable", "economical", "backpack"],
+    "photography": ["photography", "photo", "pictures", "scenic", "views"]
+  },
+  "budget_keywords": {
+    "ultra_budget": ["backpack", "hostel", "cheapest", "shoestring", "broke", "no money"],
+    "budget": ["budget", "cheap", "affordable", "economical", "save money", "cost conscious"],
+    "moderate": ["moderate", "comfortable", "reasonable", "mid-range", "decent"],
+    "luxury": ["luxury", "premium", "exclusive", "splurge", "best", "five star", "no budget"]
+  },
+  "interest_keywords": {
+    "adventure": ["hiking", "climbing", "diving", "snorkeling", "surfing", "skiing", "snowboarding", "cycling", "running"],
+    "wellness": ["yoga", "meditation", "spa", "wellness", "relaxation"],
+    "culture": ["museums", "galleries", "theaters", "concerts", "festivals", "temples", "churches", "mosques", "castles", "palaces", "ruins", "archaeology"],
+    "food": ["cooking", "wine", "beer", "coffee", "tea", "restaurant", "cuisine", "dining"],
+    "shopping": ["shopping", "markets", "boutiques", "stores"],
+    "nature": ["parks", "gardens", "forest", "mountain", "desert", "ocean", "river", "lake", "waterfall", "cave", "volcano", "glacier", "island", "beach"],
+    "wildlife": ["wildlife", "safari", "zoo", "aquarium", "botanical", "birdwatching", "fishing", "hunting"]
+  }
+}
+
+

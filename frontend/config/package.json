@@ -1,12 +1,20 @@
 {
-  "name": "vacation-chatbot-frontend",
+  "name": "vacation-planning-system-frontend",
   "version": "1.0.0",
   "private": true,
-  "description": "Vacation Planning Chatbot Frontend - React application for AI-powered travel planning",
-  "keywords": ["vacation", "travel", "chatbot", "react", "ai", "planning"],
+  "description": "Vacation Planning System Frontend - React application for AI-powered travel planning",
+  "keywords": [
+    "vacation",
+    "travel",
+    "chatbot",
+    "react",
+    "ai",
+    "planning"
+  ],
   "author": "Vacation Planning Team",
   "license": "MIT",
   "dependencies": {
+    "@maptiler/sdk": "^3.8.0",
     "axios": "^1.6.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",

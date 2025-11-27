@@ -6,12 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class ProactiveAssistant:
-    """
-    Helps users plan their vacation by thinking ahead and offering helpful suggestions.
-    
-    This service tries to anticipate what users might need next and gives them
-    friendly suggestions to make their vacation planning easier and more fun.
-    """
+    # Helps users plan their vacation by thinking ahead and offering helpful suggestions.
     
     def get_proactive_suggestions(
         self, 
@@ -19,7 +14,7 @@ class ProactiveAssistant:
         preferences: Dict,
         message_count: int
     ) -> List[Dict]:
-        """Give users helpful suggestions based on where they are in planning their trip."""
+        # Give users helpful suggestions based on where they are in planning their trip.
         suggestions = []
         # Welcome them if they're just getting started
         if message_count <= 3:
@@ -85,7 +80,7 @@ class ProactiveAssistant:
         return suggestions[:3]
     
     def _calculate_days_until_travel(self, travel_dates: Dict) -> Optional[int]:
-        """See how many days until their trip starts."""
+        # See how many days until their trip starts.
         if not travel_dates or "start" not in travel_dates:
             return None
         
@@ -108,7 +103,7 @@ class ProactiveAssistant:
         preferences: Dict,
         recent_topics: List[str]
     ) -> List[str]:
-        """Guess what the user might want to ask next."""
+        # Guess what the user might want to ask next.
         anticipated = []
         # Give them some basic ideas if they haven't talked about much yet
         if not recent_topics:
@@ -171,7 +166,7 @@ class ProactiveAssistant:
         return anticipated[:3]
     
     def generate_suggestions(self, conversation, user_preferences) -> List[str]:
-        """Come up with helpful suggestions based on what is talked about."""
+        # Come up with helpful suggestions based on what is talked about.
         suggestions = []
         
         # Give them some basic questions to think about

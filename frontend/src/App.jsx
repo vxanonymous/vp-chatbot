@@ -10,25 +10,26 @@ import ChatPage from './pages/ChatPage';
 import './App.css';
 
 /**
- * Vacation Planning Chatbot - Main Application Component
+ * Vacation Planning System - Main Application Component
  * 
  * This is where everything starts - it sets up the whole app structure.
  * Handles routing, authentication, notifications, and the dark/light mode toggle.
  */
 
 function AppContent() {
-  // Set up dark mode - check if they've used it before, otherwise use their system preference
+
   const [darkMode, setDarkMode] = useState(() => {
     const savedPreference = localStorage.getItem('darkMode');
     if (savedPreference !== null) {
       return savedPreference === 'true';
     }
-    // If they haven't set a preference, use their system setting
+
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
-  // Apply the dark mode setting to the page and remember their choice
+
   useEffect(() => {
+
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -37,10 +38,11 @@ function AppContent() {
     localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
 
-  // Toggle between dark and light mode
+
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
-  // Get the notification system for showing messages to users
+
+
   const { notifications, removeNotification } = useNotification();
 
   return (

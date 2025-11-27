@@ -6,7 +6,7 @@ import App from './App.jsx';
 /**
  * React Application Entry Point
  * 
- * This is the main entry point for the Vacation Planning Chatbot React application.
+ * This is the main entry point for the Vacation Planning System React application.
  * It initializes React and renders the main App component into the DOM.
  */
 

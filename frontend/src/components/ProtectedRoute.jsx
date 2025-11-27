@@ -3,9 +3,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
+
   const { isAuthenticated, loading } = useAuth();
 
-  // Show a loading spinner while we check if they're logged in
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -14,12 +15,12 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // Send them to login if they're not logged in
+
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Show the page if they're logged in
+
   return children;
 };
 

@@ -18,24 +18,30 @@ const RichMessage = memo(({ content }) => {
   const renderers = {
     // Make headers stand out
     h1: ({ children }) => <h1 className="text-xl font-bold mt-4 mb-2">{children}</h1>,
+      // H1
     h2: ({ children }) => <h2 className="text-lg font-semibold mt-3 mb-2">{children}</h2>,
+      // H2
     h3: ({ children }) => <h3 className="text-md font-semibold mt-2 mb-1">{children}</h3>,
+      // H3
     
     // Make lists look nice
     ul: ({ children }) => <ul className="list-disc list-inside ml-4 my-2">{children}</ul>,
+      // Ul
     ol: ({ children }) => <ol className="list-decimal list-inside ml-4 my-2">{children}</ol>,
+      // Ol
     li: ({ children }) => <li className="mb-1">{children}</li>,
+      // Li
     
     // Add icons to paragraphs based on what they're talking about
     p: ({ children }) => {
-      // Turn the children into a string so we can check what it says
+
       const text = Array.isArray(children) 
         ? children.join('') 
         : String(children || '');
       
-      // Add icons based on what the message is talking about
+
       if (text.includes('$') && /\$\d+/.test(text)) {
-        // If they're talking about money, add a dollar sign icon
+
         return (
           <p className="mb-2">
             <DollarSign className="inline w-4 h-4 text-green-600 mr-1" />
@@ -45,7 +51,7 @@ const RichMessage = memo(({ content }) => {
       }
       
       if (text.includes('📍') || text.toLowerCase().includes('location')) {
-        // If they're talking about places, add a map pin icon
+
         return (
           <p className="mb-2">
             <MapPin className="inline w-4 h-4 text-blue-600 mr-1" />
@@ -55,7 +61,7 @@ const RichMessage = memo(({ content }) => {
       }
       
       if (text.includes('📅') || text.toLowerCase().includes('date')) {
-        // If they're talking about dates, add a calendar icon
+
         return (
           <p className="mb-2">
             <Calendar className="inline w-4 h-4 text-purple-600 mr-1" />
@@ -67,8 +73,9 @@ const RichMessage = memo(({ content }) => {
       return <p className="mb-2">{children}</p>;
     },
     
-    // Make code blocks look nice
+
     code: ({ inline, children }) => {
+
       if (inline) {
         return <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>;
       }
@@ -79,8 +86,9 @@ const RichMessage = memo(({ content }) => {
       );
     },
     
-    // Make links look clickable
+
     a: ({ href, children }) => (
+      // A
       <a 
         href={href} 
         target="_blank" 
@@ -93,6 +101,7 @@ const RichMessage = memo(({ content }) => {
     
     // Make quotes stand out
     blockquote: ({ children }) => (
+      // Blockquote
       <blockquote className="border-l-4 border-primary-400 pl-4 italic my-2 text-gray-700">
         {children}
       </blockquote>

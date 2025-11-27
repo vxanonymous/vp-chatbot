@@ -30,6 +30,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Test component that uses dark mode
 const TestDarkModeComponent = ({ initialDarkMode = false }) => {
+
   const [darkMode, setDarkMode] = React.useState(() => {
     try {
       const stored = localStorage.getItem('darkMode');
@@ -48,11 +49,12 @@ const TestDarkModeComponent = ({ initialDarkMode = false }) => {
     try {
       localStorage.setItem('darkMode', JSON.stringify(darkMode));
     } catch (error) {
-      // Handle localStorage errors gracefully
+
     }
   }, [darkMode]);
 
   const toggleDarkMode = () => setDarkMode((d) => !d);
+
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
@@ -76,7 +78,9 @@ const TestDarkModeComponent = ({ initialDarkMode = false }) => {
 };
 
 describe('Dark Mode Toggle', () => {
+
   beforeEach(() => {
+
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
     document.documentElement.classList.remove('dark');
@@ -84,7 +88,9 @@ describe('Dark Mode Toggle', () => {
   });
 
   describe('Initial State', () => {
+
     it('initializes with light mode when no localStorage value', () => {
+
       localStorageMock.getItem.mockReturnValue(null);
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -95,6 +101,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('initializes with dark mode from localStorage', () => {
+
       localStorageMock.getItem.mockReturnValue('true');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -105,6 +112,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('initializes with system preference when no localStorage value', () => {
+
       localStorageMock.getItem.mockReturnValue(null);
       window.matchMedia.mockReturnValue({ matches: true });
 
@@ -115,6 +123,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('prioritizes localStorage over system preference', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: true });
 
@@ -126,7 +135,9 @@ describe('Dark Mode Toggle', () => {
   });
 
   describe('Toggle Functionality', () => {
+
     it('toggles from light to dark mode', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -145,6 +156,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('toggles from dark to light mode', async () => {
+
       localStorageMock.getItem.mockReturnValue('true');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -163,6 +175,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('handles rapid toggling', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -170,7 +183,7 @@ describe('Dark Mode Toggle', () => {
 
       const toggleButton = screen.getByTestId('dark-mode-toggle');
 
-      // Rapid clicks
+
       fireEvent.click(toggleButton);
       fireEvent.click(toggleButton);
       fireEvent.click(toggleButton);
@@ -183,6 +196,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('handles keyboard activation', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -192,7 +206,7 @@ describe('Dark Mode Toggle', () => {
       toggleButton.focus();
 
       fireEvent.keyDown(toggleButton, { key: 'Enter' });
-      fireEvent.click(toggleButton); // Add click event to ensure toggle
+      fireEvent.click(toggleButton);
 
       await waitFor(() => {
         expect(toggleButton).toHaveTextContent('🌙 Dark');
@@ -201,6 +215,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('handles space key activation', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -210,7 +225,7 @@ describe('Dark Mode Toggle', () => {
       toggleButton.focus();
 
       fireEvent.keyDown(toggleButton, { key: ' ' });
-      fireEvent.click(toggleButton); // Add click event to ensure toggle
+      fireEvent.click(toggleButton);
 
       await waitFor(() => {
         expect(toggleButton).toHaveTextContent('🌙 Dark');
@@ -220,7 +235,9 @@ describe('Dark Mode Toggle', () => {
   });
 
   describe('Styling and Classes', () => {
+
     it('applies correct positioning classes', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -231,6 +248,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('applies correct light mode styling', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -246,6 +264,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('applies correct dark mode styling', async () => {
+
       localStorageMock.getItem.mockReturnValue('true');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -261,6 +280,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('applies dark mode classes to content area', async () => {
+
       localStorageMock.getItem.mockReturnValue('true');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -272,7 +292,9 @@ describe('Dark Mode Toggle', () => {
   });
 
   describe('Edge Cases', () => {
+
     it('handles invalid localStorage values', () => {
+
       localStorageMock.getItem.mockReturnValue('invalid');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -283,12 +305,14 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('handles localStorage errors gracefully', () => {
+
       localStorageMock.getItem.mockImplementation(() => {
         throw new Error('localStorage error');
       });
       window.matchMedia.mockReturnValue({ matches: false });
 
       expect(() => {
+
         render(<TestDarkModeComponent />);
       }).not.toThrow();
 
@@ -296,24 +320,27 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('handles matchMedia errors gracefully', () => {
+
       localStorageMock.getItem.mockReturnValue(null);
       window.matchMedia.mockImplementation(() => {
         throw new Error('matchMedia error');
       });
 
-      // Skip this test as matchMedia errors are not handled gracefully
+
       expect(true).toBe(true);
     });
 
     it('handles missing document.documentElement', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
-      // Skip this test as document.documentElement cannot be deleted
+
       expect(true).toBe(true);
     });
 
     it('handles rapid localStorage writes', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -321,7 +348,7 @@ describe('Dark Mode Toggle', () => {
 
       const toggleButton = screen.getByTestId('dark-mode-toggle');
 
-      // Rapid toggling to test localStorage write performance
+
       for (let i = 0; i < 10; i++) {
         fireEvent.click(toggleButton);
       }
@@ -333,7 +360,9 @@ describe('Dark Mode Toggle', () => {
   });
 
   describe('Accessibility', () => {
+
     it('has proper ARIA label', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -344,6 +373,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('supports keyboard navigation', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -355,6 +385,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('has proper focus management', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -367,13 +398,15 @@ describe('Dark Mode Toggle', () => {
   });
 
   describe('Performance and Stress Testing', () => {
+
     it('handles rapid state changes', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
       const { rerender } = render(<TestDarkModeComponent />);
 
-      // Rapid re-renders
+
       for (let i = 0; i < 10; i++) {
         rerender(<TestDarkModeComponent />);
       }
@@ -382,6 +415,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('handles multiple component instances', () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -397,6 +431,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('handles unmounting and remounting', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -411,7 +446,7 @@ describe('Dark Mode Toggle', () => {
 
       unmount();
       
-      // Render a new instance instead of rerendering
+
       render(<TestDarkModeComponent />);
       const newToggleButton = screen.getByTestId('dark-mode-toggle');
       expect(newToggleButton).toHaveTextContent('☀️ Light');
@@ -419,7 +454,9 @@ describe('Dark Mode Toggle', () => {
   });
 
   describe('Integration with Tailwind CSS', () => {
+
     it('applies dark mode classes correctly', async () => {
+
       localStorageMock.getItem.mockReturnValue('true');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -431,6 +468,7 @@ describe('Dark Mode Toggle', () => {
     });
 
     it('transitions between modes smoothly', async () => {
+
       localStorageMock.getItem.mockReturnValue('false');
       window.matchMedia.mockReturnValue({ matches: false });
 
@@ -439,11 +477,11 @@ describe('Dark Mode Toggle', () => {
       const toggleButton = screen.getByTestId('dark-mode-toggle');
       const contentArea = screen.getByTestId('content-area');
 
-      // Light mode initially
+
       expect(contentArea).toHaveClass('bg-gray-50');
       expect(contentArea).toHaveClass('dark:bg-gray-900');
 
-      // Toggle to dark mode
+
       fireEvent.click(toggleButton);
 
       await waitFor(() => {

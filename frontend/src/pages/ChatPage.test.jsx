@@ -26,6 +26,7 @@ vi.mock('../hooks/useConversations', () => ({
 
 vi.mock('../contexts/NotificationContext', () => ({
   NotificationProvider: ({ children }) => <div data-testid="notification-provider">{children}</div>,
+    //  notification provider
   useNotification: vi.fn(() => ({
     addGlobalNotification: vi.fn(),
     addInlineNotification: vi.fn(),
@@ -34,9 +35,18 @@ vi.mock('../contexts/NotificationContext', () => ({
   }))
 }));
 
+vi.mock('../components/VacationSummary', () => ({
+  default: ({ summary }) => summary ? <div data-testid="vacation-summary">Vacation Summary</div> : null
+}));
+
+vi.mock('../components/VacationMap', () => ({
+  default: () => <div data-testid="vacation-map">Vacation Map</div>
+}));
+
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
   AuthProvider: ({ children }) => <div data-testid="auth-provider">{children}</div>
+    //  auth provider
 }));
 
 const mockUseChat = vi.fn();
@@ -71,10 +81,12 @@ const renderWithProviders = (component) => {
 };
 
 describe('ChatPage', () => {
+
   beforeEach(() => {
+
     vi.clearAllMocks();
     
-    // Setup default mocks
+
     mockUseChat.mockReturnValue({
       messages: [],
       localMessages: [],
@@ -106,7 +118,7 @@ describe('ChatPage', () => {
       loading: false
     });
 
-    // Setup notification mock
+
     mockUseNotification.mockReturnValue({
       addGlobalNotification: vi.fn(),
       addInlineNotification: vi.fn(),
@@ -116,15 +128,18 @@ describe('ChatPage', () => {
   });
 
   describe('Basic Rendering', () => {
+
     it('renders chat interface with sidebar and message area', () => {
+
       renderWithProviders(<ChatPage />);
 
       expect(screen.getByTestId('auth-provider')).toBeInTheDocument();
-      // Chat interface should be rendered
+
       expect(screen.getByTestId('message-list')).toBeInTheDocument();
     });
 
     it('shows loading state when auth is loading', () => {
+
       mockUseAuth.mockReturnValue({
         user: null,
         isAuthenticated: false,
@@ -133,11 +148,12 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
       
-      // Should show loading or redirect
+
       expect(screen.getByTestId('auth-provider')).toBeInTheDocument();
     });
 
     it('redirects to login when not authenticated', () => {
+
       mockUseAuth.mockReturnValue({
         user: null,
         isAuthenticated: false,
@@ -146,13 +162,15 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
       
-      // Should redirect to login (handled by ProtectedRoute)
+
       expect(screen.getByTestId('auth-provider')).toBeInTheDocument();
     });
   });
 
   describe('Welcome Message', () => {
+
     it('shows personalized welcome message for authenticated user', () => {
+
       const mockAddInlineNotification = vi.fn();
       mockUseNotification.mockReturnValue({
         addGlobalNotification: vi.fn(),
@@ -184,8 +202,9 @@ describe('ChatPage', () => {
     });
 
     it('uses email when full_name is not available', () => {
+
       mockUseAuth.mockReturnValue({
-        user: { id: '1', email: 'test@example.com' }, // No full_name
+        user: { id: '1', email: 'test@example.com' },
         isAuthenticated: true,
         loading: false
       });
@@ -207,6 +226,7 @@ describe('ChatPage', () => {
     });
 
     it('does not show welcome message if already shown', () => {
+
       const mockAddInlineNotification = vi.fn();
       mockUseNotification.mockReturnValue({
         addGlobalNotification: vi.fn(),
@@ -230,7 +250,9 @@ describe('ChatPage', () => {
   });
 
   describe('Conversation Management', () => {
+
     it('creates new conversation and shows notifications', async () => {
+
       const mockCreateNewConversation = vi.fn().mockResolvedValue({ id: 'new-conv' });
       const mockAddGlobalNotification = vi.fn();
       const mockAddInlineNotification = vi.fn();
@@ -255,9 +277,9 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // Simulate creating a new conversation by calling the component's handler
+
       const newConv = await mockCreateNewConversation();
-      // The component would call this internally, so we need to simulate it
+
       if (newConv) {
         mockAddGlobalNotification('New conversation created', 'success');
         mockAddInlineNotification('New conversation created! I\'m ready to help you plan your vacation. What would you like to know?', 'success');
@@ -271,6 +293,7 @@ describe('ChatPage', () => {
     });
 
     it('handles conversation creation failure', async () => {
+
       const mockCreateNewConversation = vi.fn().mockRejectedValue(new Error('Failed'));
       const mockAddGlobalNotification = vi.fn();
 
@@ -294,11 +317,11 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // Simulate failed conversation creation
+
       try {
         await mockCreateNewConversation();
       } catch (error) {
-        // Expected to fail
+
         mockAddGlobalNotification('Failed to create new conversation', 'error');
       }
 
@@ -306,6 +329,7 @@ describe('ChatPage', () => {
     });
 
     it('deletes conversation and shows notifications', async () => {
+
       const mockRemoveConversation = vi.fn().mockResolvedValue(true);
       const mockAddGlobalNotification = vi.fn();
       const mockAddInlineNotification = vi.fn();
@@ -330,7 +354,7 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // Simulate deleting a conversation
+
       const deleted = await mockRemoveConversation('conv-1');
       if (deleted) {
         mockAddInlineNotification('Conversation deleted successfully.', 'info');
@@ -342,6 +366,7 @@ describe('ChatPage', () => {
     });
 
     it('handles conversation deletion failure', async () => {
+
       const mockRemoveConversation = vi.fn().mockRejectedValue(new Error('Failed'));
       const mockAddGlobalNotification = vi.fn();
 
@@ -365,11 +390,11 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // Simulate failed conversation deletion
+
       try {
         await mockRemoveConversation('conv-1');
       } catch (error) {
-        // Expected to fail
+
         mockAddGlobalNotification('Failed to delete conversation', 'error');
       }
 
@@ -377,6 +402,7 @@ describe('ChatPage', () => {
     });
 
     it('updates conversation title and handles errors', async () => {
+
       const mockUpdateConversationTitle = vi.fn().mockRejectedValue(new Error('Failed'));
       const mockAddGlobalNotification = vi.fn();
 
@@ -400,11 +426,11 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // Simulate failed title update
+
       try {
         await mockUpdateConversationTitle('conv-1', 'New Title');
       } catch (error) {
-        // Expected to fail
+
         mockAddGlobalNotification('Failed to update conversation title', 'error');
       }
 
@@ -413,7 +439,9 @@ describe('ChatPage', () => {
   });
 
   describe('Message Handling', () => {
+
     it('sends messages through the chat hook', () => {
+
       const mockSendMessage = vi.fn();
       
       mockUseChat.mockReturnValue({
@@ -432,12 +460,13 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // The actual message sending would be tested in the MessageInput component
-      // This test just ensures the hook is properly connected
+
+
       expect(mockSendMessage).toBeDefined();
     });
 
     it('shows loading state during message processing', () => {
+
       mockUseChat.mockReturnValue({
         messages: [],
         localMessages: [],
@@ -454,24 +483,25 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // Should show loading indicators
+
       expect(screen.getByTestId('auth-provider')).toBeInTheDocument();
     });
   });
 
   describe('Error Handling', () => {
+
     it('handles errors gracefully', () => {
-      // Mock console.error to prevent test output pollution
+
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      // Force an error by making a hook throw
+
       mockUseChat.mockImplementation(() => {
         throw new Error('Test error');
       });
 
       renderWithProviders(<ChatPage />);
       
-      // The error boundary should catch the error and show the error UI
+
       expect(screen.getByText('Oops! Something went wrong')).toBeInTheDocument();
 
       consoleSpy.mockRestore();
@@ -479,33 +509,40 @@ describe('ChatPage', () => {
   });
 
   describe('Dark Mode Integration', () => {
+
     it('applies dark mode classes correctly', () => {
+
       renderWithProviders(<ChatPage />);
 
-      // Check that the main container has dark mode classes
+
       const mainContainer = screen.getByTestId('auth-provider').querySelector('.flex.h-screen');
       expect(mainContainer).toHaveClass('bg-gray-50', 'dark:bg-gray-900');
     });
   });
 
   describe('Accessibility', () => {
+
     it('has proper ARIA labels and roles', () => {
+
       renderWithProviders(<ChatPage />);
 
-      // Check for message list
+
       expect(screen.getByTestId('message-list')).toBeInTheDocument();
     });
 
     it('supports keyboard navigation', () => {
+
       renderWithProviders(<ChatPage />);
 
-      // The component should be keyboard accessible
+
       expect(screen.getByTestId('auth-provider')).toBeInTheDocument();
     });
   });
 
   describe('Performance', () => {
+
     it('handles large message lists efficiently', () => {
+
       const largeMessages = Array.from({ length: 100 }, (_, i) => ({
         id: `msg-${i}`,
         content: `Message ${i}`,
@@ -529,8 +566,162 @@ describe('ChatPage', () => {
 
       renderWithProviders(<ChatPage />);
 
-      // Should render without performance issues
+
       expect(screen.getByTestId('auth-provider')).toBeInTheDocument();
+    });
+  });
+
+  describe('Map Sidebar', () => {
+    it('shows map toggle button when vacationSummary has destinations', () => {
+      mockUseChat.mockReturnValue({
+        messages: [],
+        localMessages: [],
+        isLoading: false,
+        sendMessage: vi.fn(),
+        isProcessing: false,
+        canSwitchConversation: true,
+        cleanupOnDeletion: vi.fn(),
+        suggestions: [],
+        setSuggestions: vi.fn(),
+        forceReload: vi.fn(),
+        vacationSummary: {
+          destination: 'Bangladesh',
+          destinations: ['Bangladesh'],
+          budget_range: 'mid-range',
+          travel_style: ['adventure']
+        }
+      });
+
+      renderWithProviders(<ChatPage />);
+
+      const mapButton = screen.getByText(/Show Map|Hide Map/i);
+      expect(mapButton).toBeInTheDocument();
+    });
+
+    it('shows map toggle button when vacationSummary has destination string', () => {
+      mockUseChat.mockReturnValue({
+        messages: [],
+        localMessages: [],
+        isLoading: false,
+        sendMessage: vi.fn(),
+        isProcessing: false,
+        canSwitchConversation: true,
+        cleanupOnDeletion: vi.fn(),
+        suggestions: [],
+        setSuggestions: vi.fn(),
+        forceReload: vi.fn(),
+        vacationSummary: {
+          destination: 'Bangladesh',
+          budget_range: 'mid-range'
+        }
+      });
+
+      renderWithProviders(<ChatPage />);
+
+      const mapButton = screen.getByText(/Show Map|Hide Map/i);
+      expect(mapButton).toBeInTheDocument();
+    });
+
+    it('does not show map sidebar when vacationSummary has no destinations', () => {
+      mockUseChat.mockReturnValue({
+        messages: [],
+        localMessages: [],
+        isLoading: false,
+        sendMessage: vi.fn(),
+        isProcessing: false,
+        canSwitchConversation: true,
+        cleanupOnDeletion: vi.fn(),
+        suggestions: [],
+        setSuggestions: vi.fn(),
+        forceReload: vi.fn(),
+        vacationSummary: {
+          budget_range: 'mid-range',
+          travel_style: ['adventure']
+        }
+      });
+
+      renderWithProviders(<ChatPage />);
+
+      const mapButton = screen.queryByText(/Show Map|Hide Map/i);
+      expect(mapButton).not.toBeInTheDocument();
+    });
+
+    it('does not show map sidebar when vacationSummary is null', () => {
+      mockUseChat.mockReturnValue({
+        messages: [],
+        localMessages: [],
+        isLoading: false,
+        sendMessage: vi.fn(),
+        isProcessing: false,
+        canSwitchConversation: true,
+        cleanupOnDeletion: vi.fn(),
+        suggestions: [],
+        setSuggestions: vi.fn(),
+        forceReload: vi.fn(),
+        vacationSummary: null
+      });
+
+      renderWithProviders(<ChatPage />);
+
+      const mapButton = screen.queryByText(/Show Map|Hide Map/i);
+      expect(mapButton).not.toBeInTheDocument();
+    });
+
+    it('opens map sidebar when toggle button is clicked', async () => {
+      mockUseChat.mockReturnValue({
+        messages: [],
+        localMessages: [],
+        isLoading: false,
+        sendMessage: vi.fn(),
+        isProcessing: false,
+        canSwitchConversation: true,
+        cleanupOnDeletion: vi.fn(),
+        suggestions: [],
+        setSuggestions: vi.fn(),
+        forceReload: vi.fn(),
+        vacationSummary: {
+          destination: 'Bangladesh',
+          destinations: ['Bangladesh'],
+          budget_range: 'mid-range'
+        }
+      });
+
+      renderWithProviders(<ChatPage />);
+
+      const mapButton = screen.getByText(/Show Map|Hide Map/i);
+      fireEvent.click(mapButton);
+
+      await waitFor(() => {
+        const vacationSummary = screen.queryByTestId('vacation-summary');
+        expect(vacationSummary).toBeInTheDocument();
+      });
+    });
+
+    it('auto-opens map sidebar when vacationSummary with destinations arrives', async () => {
+      mockUseChat.mockReturnValue({
+        messages: [],
+        localMessages: [],
+        isLoading: false,
+        sendMessage: vi.fn(),
+        isProcessing: false,
+        canSwitchConversation: true,
+        cleanupOnDeletion: vi.fn(),
+        suggestions: [],
+        setSuggestions: vi.fn(),
+        forceReload: vi.fn(),
+        vacationSummary: {
+          destination: 'Bangladesh',
+          destinations: ['Bangladesh'],
+          budget_range: 'mid-range'
+        }
+      });
+
+      renderWithProviders(<ChatPage />);
+
+      await waitFor(() => {
+        const mapButton = screen.queryByText(/Show Map|Hide Map/i);
+        expect(mapButton).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
   });
 }); 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Production Deployment Script for Vacation Planning Chatbot
+# Production Deployment Script for Vacation Planning System
 # This script handles the complete production deployment process
 # 
 # NOTE: This script is designed for macOS systems only.
@@ -258,7 +258,7 @@ case "${1:-}" in
         echo "  --help, -h    Show this help message"
         echo "  --validate    Only validate environment and prerequisites"
         echo
-        echo "This script deploys the vacation planning chatbot to production."
+        echo "This script deploys the vacation planning system to production."
         exit 0
         ;;
     --validate)

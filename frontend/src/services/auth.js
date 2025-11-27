@@ -12,23 +12,32 @@ const authApi = axios.create({
 
 // Token management
 export const getToken = () => localStorage.getItem('token');
-export const setToken = (token) => localStorage.setItem('token', token);
-export const removeToken = () => localStorage.removeItem('token');
 
 // User management
+
+export const setToken = (token) => localStorage.setItem('token', token);
+
+export const removeToken = () => localStorage.removeItem('token');
+
+
 export const getUser = () => {
+
   const userStr = localStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 };
+// Auth API calls
+
 export const setUser = (user) => localStorage.setItem('user', JSON.stringify(user));
+
 export const removeUser = () => localStorage.removeItem('user');
 
-// Auth API calls
+
 export const login = async (email, password) => {
+
   try {
-    // The backend expects form data, not JSON
+
     const formData = new URLSearchParams();
-    formData.append('username', email); // OAuth2 expects 'username' field
+    formData.append('username', email);
     formData.append('password', password);
     
     const response = await authApi.post('/auth/login', formData, {
@@ -39,7 +48,7 @@ export const login = async (email, password) => {
     
     const { access_token, user_id, email: userEmail, full_name } = response.data;
     
-    // Create user object from response
+
     const user = {
       id: user_id,
       email: userEmail,
@@ -51,7 +60,7 @@ export const login = async (email, password) => {
     
     return response.data;
   } catch (error) {
-    // Handle validation errors
+
     if (error.response?.data?.detail && Array.isArray(error.response.data.detail)) {
       const validationErrors = error.response.data.detail
         .map(err => err.msg || 'Validation error')
@@ -68,6 +77,7 @@ export const login = async (email, password) => {
 };
 
 export const signup = async (email, password, fullName) => {
+
   try {
     const response = await authApi.post('/auth/signup', {
       email,
@@ -77,7 +87,7 @@ export const signup = async (email, password, fullName) => {
     
     const { access_token, user_id, email: userEmail, full_name } = response.data;
     
-    // Create user object from response
+
     const user = {
       id: user_id,
       email: userEmail,
@@ -89,7 +99,7 @@ export const signup = async (email, password, fullName) => {
     
     return response.data;
   } catch (error) {
-    // Handle validation errors
+
     if (error.response?.data?.detail && Array.isArray(error.response.data.detail)) {
       const validationErrors = error.response.data.detail
         .map(err => err.msg || 'Validation error')
@@ -106,6 +116,7 @@ export const signup = async (email, password, fullName) => {
 };
 
 export const logout = () => {
+
   removeToken();
   removeUser();
 };

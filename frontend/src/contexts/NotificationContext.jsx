@@ -4,29 +4,43 @@ const NotificationContext = createContext();
 
 export const useNotification = () => useContext(NotificationContext);
 
+
 export const NotificationProvider = ({ children }) => {
-  // Keep track of all the notifications we want to show
+
   const [notifications, setNotifications] = useState([]);
 
   const addNotification = useCallback((message, type = 'info', options = {}) => {
-    // Create a unique ID for this notification
+
     const id = Date.now() + Math.random();
     const notification = {
       id,
       message,
       type,
-      position: options.position || 'top-right', // top-right, inline, form
-      dismissible: options.dismissible !== false, // default to true
-      autoDismiss: options.autoDismiss !== false, // default to true
-      duration: options.duration || 5000, // 5 seconds default
+      position: options.position || 'top-right',
+      dismissible: options.dismissible !== false,
+      autoDismiss: options.autoDismiss !== false,
+      duration: options.duration || 5000,
       ...options
     };
     
-    setNotifications((prev) => [...prev, notification]);
+    setNotifications((prev) => {
+      // Prevent duplicate notifications with same message and type
+      const isDuplicate = prev.some(n => 
+        n.message === notification.message && 
+        n.type === notification.type && 
+        n.position === notification.position
+      );
+      if (isDuplicate) {
+        return prev;
+      }
+      return [...prev, notification];
+    });
+
     
-    // Make the notification disappear after a while
+
     if (notification.autoDismiss && notification.duration > 0) {
       setTimeout(() => {
+
         removeNotification(id);
       }, notification.duration);
     }
@@ -37,12 +51,14 @@ export const NotificationProvider = ({ children }) => {
   const removeNotification = useCallback((id) => {
     // Get rid of a specific notification
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+
   }, []);
 
   const clearNotifications = useCallback((position = null) => {
     // Clear notifications by where they appear, or all of them
     if (position) {
       setNotifications((prev) => prev.filter((n) => n.position !== position));
+
     } else {
       setNotifications([]);
     }

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 
 const SignupForm = ({ onSwitchToLogin }) => {
+
   const { signup } = useAuth();
   const { addFormNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
@@ -12,11 +13,12 @@ const SignupForm = ({ onSwitchToLogin }) => {
   const password = watch('password');
 
   const onSubmit = async (data) => {
+
     setIsLoading(true);
     try {
       const result = await signup(data);
       if (!result.success) {
-        // Show them what went wrong with their signup
+
         addFormNotification(result.message || 'Signup failed', 'error');
       }
     } finally {
@@ -123,6 +125,7 @@ const SignupForm = ({ onSwitchToLogin }) => {
               {...register('confirmPassword', {
                 required: 'Please confirm your password',
                 validate: (value) => value === password || 'Passwords do not match',
+
               })}
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="••••••••"

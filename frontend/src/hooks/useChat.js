@@ -12,22 +12,21 @@ import { useNotification } from '../contexts/NotificationContext';
  * @param {Function} onConversationUpdate - Callback when conversation updates
  * @returns {Object} Chat state and functions
  */
+
 export const useChat = (conversationId, onConversationUpdate) => {
+
   const { addNotification } = useNotification();
   
-  // Keep track of what's happening in the chat
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [vacationSummary, setVacationSummary] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Use refs to keep track of things and prevent weird race conditions
   const loadedConversationRef = useRef(null);
   const abortControllerRef = useRef(null);
   const processingConversationRef = useRef(null);
 
-  // The messages we show when someone starts a new chat or comes back
   const getWelcomeMessage = useCallback(() => ({
     role: 'assistant',
     content: "Hello! I'm your vacation planning assistant. Where would you like to go for your next adventure?",
@@ -40,17 +39,17 @@ export const useChat = (conversationId, onConversationUpdate) => {
     timestamp: new Date().toISOString()
   }), []);
 
-  // Clear everything and start fresh
-  const clearState = useCallback(() => {
+  const clearState = useCallback((clearVacationSummary = true) => {
     setMessages([]);
-    setVacationSummary(null);
+    if (clearVacationSummary) {
+      setVacationSummary(null);
+    }
     setSuggestions([]);
     setIsLoading(false);
     setIsProcessing(false);
     processingConversationRef.current = null;
   }, []);
 
-  // Clean up when someone deletes a conversation
   const cleanupOnDeletion = useCallback(() => {
     if (isProcessing) {
       setIsProcessing(false);
@@ -61,29 +60,28 @@ export const useChat = (conversationId, onConversationUpdate) => {
     }
   }, [isProcessing]);
 
-  // Load a conversation by its ID
   const loadConversation = useCallback(async (id) => {
-    // Don't load if we're busy processing something else
     if (isProcessing && processingConversationRef.current !== id) {
       return;
     }
 
-    // Don't load the same conversation twice
     if (loadedConversationRef.current === id && id) {
       return;
     }
 
-    // Stop any request that's still running
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    // Clear everything and start fresh
-    clearState();
+    setMessages([]);
+    setSuggestions([]);
+    setIsLoading(false);
+    setIsProcessing(false);
+    processingConversationRef.current = null;
 
-    // If there's no ID or it's invalid, show the welcome message
     if (!id || id === 'undefined' || id === 'null') {
       setMessages([getWelcomeMessage()]);
+      setVacationSummary(null);
       loadedConversationRef.current = null;
       return;
     }
@@ -97,12 +95,10 @@ export const useChat = (conversationId, onConversationUpdate) => {
         signal: abortControllerRef.current.signal
       });
 
-      // Double-check we're still loading the same conversation
       if (loadedConversationRef.current !== id) {
         return;
       }
 
-      // Set messages
       if (!conversation.messages || conversation.messages.length === 0) {
         setMessages([getContinueMessage()]);
       } else {
@@ -114,30 +110,43 @@ export const useChat = (conversationId, onConversationUpdate) => {
         setMessages(formattedMessages);
       }
 
-      // Set vacation preferences
+      // Update vacation summary from conversation preferences if available
       if (conversation.vacation_preferences && 
-          Object.keys(conversation.vacation_preferences).length > 0 &&
-          conversation.vacation_preferences.destinations?.length > 0) {
-        setVacationSummary({
-          destination: conversation.vacation_preferences.destinations[0],
-          budget_range: conversation.vacation_preferences.budget_range,
-          travel_style: conversation.vacation_preferences.travel_style,
-          travel_dates: conversation.vacation_preferences.travel_dates
-        });
+          Object.keys(conversation.vacation_preferences).length > 0) {
+        const prefs = conversation.vacation_preferences;
+        const destinations = prefs.destinations || (prefs.destination ? [prefs.destination] : []);
+        
+        if (destinations.length > 0 || prefs.destination) {
+          setVacationSummary({
+            destination: prefs.destination || destinations[0],
+            destinations: destinations,
+            budget_range: prefs.budget_range,
+            budget_amount: prefs.budget_amount,
+            travel_style: prefs.travel_style,
+            travel_dates: prefs.travel_dates,
+            group_size: prefs.group_size,
+            interests: prefs.interests
+          });
+        } else {
+          // If preferences exist but no destinations, don't clear existing summary
+          // It might have been set from a recent message
+        }
       }
+      // If conversation doesn't have preferences yet, preserve existing vacationSummary
+      // It might have been set from a recent message response
 
     } catch (error) {
       if (error.name === 'AbortError') {
         return;
       }
 
-      console.error('Failed to load conversation:', error);
+      if (error.message && !error.message.includes('404')) {
+        console.error('Failed to load conversation:', error);
+      }
       
-      // Only update if we're still trying to load this conversation
       if (loadedConversationRef.current === id) {
-        if (error.response?.status === 404) {
-          addNotification('Conversation not found. Starting a new chat.', 'info');
-          window.location.href = '/chat';
+        if (error.response?.status === 404 || (error.message && error.message.includes('404'))) {
+          setMessages([getWelcomeMessage()]);
         } else {
           addNotification('Failed to load conversation', 'error');
           setMessages([getWelcomeMessage()]);
@@ -150,14 +159,17 @@ export const useChat = (conversationId, onConversationUpdate) => {
     }
   }, [clearState, getWelcomeMessage, getContinueMessage, isProcessing]);
 
-  // Send message
   const sendChatMessage = useCallback(async (content) => {
-    // Cancel any existing request
+    // Prevent concurrent message sending
+    if (isProcessing) {
+      console.warn('Message already processing, ignoring new message');
+      return;
+    }
+    
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     
-    // Store the conversation ID at the time of sending
     const requestConversationId = conversationId;
     
     const userMessage = {
@@ -171,7 +183,6 @@ export const useChat = (conversationId, onConversationUpdate) => {
     setIsProcessing(true);
     processingConversationRef.current = requestConversationId;
 
-    // Create new abort controller for this request
     abortControllerRef.current = new AbortController();
 
     try {
@@ -179,12 +190,10 @@ export const useChat = (conversationId, onConversationUpdate) => {
         signal: abortControllerRef.current.signal
       });
       
-      // Check if conversation has changed since we sent the request
       if (requestConversationId !== conversationId) {
         return;
       }
       
-      // Add assistant response
       const assistantMessage = {
         role: 'assistant',
         content: response.response,
@@ -192,34 +201,35 @@ export const useChat = (conversationId, onConversationUpdate) => {
       };
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Handle new conversation
       if (!requestConversationId && response.conversation_id) {
         loadedConversationRef.current = response.conversation_id;
         onConversationUpdate?.(response.conversation_id);
-        // Trigger a refresh of conversations list to show the new conversation
         setTimeout(() => {
-          // This will trigger a refresh of the conversations list
+
           window.dispatchEvent(new CustomEvent('conversation-created', { 
             detail: { conversationId: response.conversation_id } 
           }));
         }, 100);
       }
 
-      // Update vacation summary and suggestions
+      console.log('Full response received:', response);
       if (response.vacation_summary) {
+        console.log('Received vacation_summary:', response.vacation_summary);
+        console.log('Setting vacationSummary state with:', response.vacation_summary);
         setVacationSummary(response.vacation_summary);
+      } else {
+        console.warn('No vacation_summary in response. Response keys:', Object.keys(response || {}));
+        console.log('Full response object:', JSON.stringify(response, null, 2));
       }
       if (response.suggestions) {
         setSuggestions(response.suggestions);
       }
     } catch (error) {
-      // Don't show error if request was cancelled or conversation changed
       if (error.name === 'AbortError' || error.message.includes('canceled') || requestConversationId !== conversationId) {
         return;
       }
       
       console.error('Error sending message:', error);
-      // Ensure error message is a string
       let errorContent = "I'm sorry, I encountered an error. Please try again.";
       if (error.message && typeof error.message === 'string') {
         errorContent = error.message;
@@ -236,7 +246,6 @@ export const useChat = (conversationId, onConversationUpdate) => {
       setMessages(prev => [...prev, errorMessage]);
       addNotification('Failed to send message', 'error');
     } finally {
-      // Only clear loading if conversation hasn't changed
       if (requestConversationId === conversationId) {
         setIsLoading(false);
       }
@@ -246,7 +255,6 @@ export const useChat = (conversationId, onConversationUpdate) => {
     }
   }, [conversationId, onConversationUpdate]);
 
-  // Force reload conversation
   const forceReload = useCallback(() => {
     loadedConversationRef.current = null;
     if (conversationId) {
@@ -254,12 +262,13 @@ export const useChat = (conversationId, onConversationUpdate) => {
     }
   }, [conversationId, loadConversation]);
 
-  // Effect to load conversation when ID changes
   useEffect(() => {
+
     loadedConversationRef.current = null;
     loadConversation(conversationId);
 
     return () => {
+
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }

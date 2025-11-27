@@ -1,0 +1,74 @@
+{
+  "destination_examples": [
+    {
+      "destination": "Paris",
+      "description": "The City of Light has so much to offer",
+      "nickname": "City of Light",
+      "attractions": [
+        "Eiffel Tower",
+        "Louvre Museum",
+        "Notre-Dame Cathedral",
+        "Arc de Triomphe",
+        "Champs-Élysées",
+        "Montmartre",
+        "Sacré-Cœur Basilica"
+      ],
+      "neighborhoods": [
+        "Le Marais",
+        "Belleville",
+        "Montmartre",
+        "Saint-Germain-des-Prés"
+      ],
+      "restaurants": [
+        "Café de Flore",
+        "L'Ami Louis",
+        "Le Comptoir du Relais",
+        "Marché des Enfants Rouges"
+      ],
+      "hidden_gems": [
+        "Canal Saint-Martin",
+        "Musée de l'Orangerie",
+        "Luxembourg Gardens"
+      ]
+    },
+    {
+      "destination": "Mongolia",
+      "description": "A land of vast steppes and nomadic culture",
+      "nickname": "Land of the Eternal Blue Sky",
+      "activities": [
+        "horseback riding",
+        "ger stays",
+        "cultural tours",
+        "nomadic experiences"
+      ],
+      "budget_breakdown": {
+        "accommodation": "$20-40/night (ger stays)",
+        "food": "$15-25/day",
+        "activities": "$300-500 (horseback riding, tours)",
+        "transport": "$200-300",
+        "permits_guides": "$100-200"
+      },
+      "best_time": "June to September",
+      "highlights": [
+        "Gobi Desert",
+        "Karakorum",
+        "Naadam Festival",
+        "Eagle hunting"
+      ]
+    }
+  ],
+  "conversation_examples": [
+    {
+      "scenario": "user_mentions_destination",
+      "user": "I want to go to {{destination}}",
+      "assistant_template": "{{destination}} sounds wonderful! {{description}}. To help me craft the perfect {{destination}} experience for you, I'm curious - are you drawn more to the classic attractions, or would you prefer discovering hidden neighborhood gems?"
+    },
+    {
+      "scenario": "user_wants_warm_weather",
+      "user": "I want to go somewhere warm",
+      "assistant": "That sounds wonderful! 🌴 To help me find your ideal warm-weather getaway, could you tell me:\n\n- Are you dreaming of **beach relaxation** or would you enjoy **cultural exploration** in a warm city?\n- What's your rough budget per person?\n- When are you thinking of traveling?\n\nSome fantastic warm destinations include:\n• **Southeast Asia** (Thailand, Vietnam) - perfect weather, great value\n• **Dubai** - luxury and adventure, guaranteed sunshine\n• **New Zealand** - stunning landscapes and outdoor adventures\n• **Morocco** - warm days, cool nights, incredible culture"
+    }
+  ]
+}
+
+

@@ -9,16 +9,17 @@ import { useNotification } from '../contexts/NotificationContext';
 
 // Custom hook for managing conversations with optimistic updates
 export const useConversations = () => {
+
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
   const { addNotification } = useNotification();
 
-  // Use ref to track pending operations for deduplication
+
   const pendingOps = useRef(new Set());
   
-  // Normalize conversation object
+
   const normalizeConversation = useCallback((conv) => ({
     ...conv,
     id: conv.id || conv._id,
@@ -27,7 +28,7 @@ export const useConversations = () => {
     updated_at: conv.updated_at || conv.created_at || new Date().toISOString()
   }), []);
 
-  // Load conversations with error handling and retry
+
   const loadConversations = useCallback(async (retries = 3) => {
     const opId = 'load-conversations';
     if (pendingOps.current.has(opId)) return;
@@ -41,6 +42,7 @@ export const useConversations = () => {
       if (Array.isArray(data)) {
         const normalized = data.map(normalizeConversation);
         setConversations(normalized.sort((a, b) => 
+
           new Date(b.updated_at) - new Date(a.updated_at)
         ));
       }
@@ -50,6 +52,7 @@ export const useConversations = () => {
       
       if (retries > 0) {
         setTimeout(() => loadConversations(retries - 1), 1000 * (4 - retries));
+
       } else {
         addNotification('Failed to load conversations', 'error');
       }
@@ -177,14 +180,17 @@ export const useConversations = () => {
 
   // Load conversations on mount
   useEffect(() => {
+
     loadConversations();
   }, [loadConversations]);
 
-  // Listen for new conversation events
+
   useEffect(() => {
+
     const handleNewConversation = () => {
-      // Refresh conversations list when a new conversation is created
+
       setTimeout(() => {
+
         loadConversations();
       }, 200);
     };
@@ -192,6 +198,7 @@ export const useConversations = () => {
     window.addEventListener('conversation-created', handleNewConversation);
     
     return () => {
+
       window.removeEventListener('conversation-created', handleNewConversation);
     };
   }, [loadConversations]);

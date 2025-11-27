@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Comprehensive Test Runner for Vacation Planning Chatbot
+# Comprehensive Test Runner for Vacation Planning System
 # This script runs all tests and generates coverage reports
 # 
 # NOTE: This script is designed for macOS systems only.
@@ -25,7 +25,7 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 # Create reports directory
 mkdir -p "$REPORTS_DIR"
 
-echo -e "${BLUE}🧪 Starting Comprehensive Test Suite for Vacation Planning Chatbot${NC}"
+echo -e "${BLUE}🧪 Starting Comprehensive Test Suite for Vacation Planning System${NC}"
 echo -e "${BLUE}Reports will be saved to: $REPORTS_DIR${NC}"
 echo ""
 
@@ -340,7 +340,7 @@ SUMMARY_FILE="$REPORTS_DIR/test_summary_$TIMESTAMP.md"
 cat > "$SUMMARY_FILE" << EOF
 # Test Summary Report
 **Generated:** $(date)
-**Project:** Vacation Planning Chatbot
+**Project:** Vacation Planning System
 **Test Run ID:** $TIMESTAMP
 
 ## Test Results Summary

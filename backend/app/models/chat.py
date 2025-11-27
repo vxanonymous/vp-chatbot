@@ -16,14 +16,14 @@ from enum import Enum
 
 
 class MessageRole(str, Enum):
-    """Message role types for chat conversations."""
+    # Message role types for chat conversations.
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
 
 
 class Message(BaseModel):
-    """Individual chat message model."""
+    # Individual chat message model.
     role: MessageRole
     content: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
@@ -31,14 +31,14 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    """Request model for chat API endpoints."""
+    # Request model for chat API endpoints.
     message: str = Field(..., min_length=1, max_length=9999, description="Chat message")
     conversation_id: Optional[str] = None
     user_preferences: Optional[Dict] = None
 
 
 class ChatResponse(BaseModel):
-    """Response model for chat API endpoints."""
+    # Response model for chat API endpoints.
     response: str
     conversation_id: str
     suggestions: Optional[List[str]] = None
@@ -46,7 +46,7 @@ class ChatResponse(BaseModel):
 
 
 class ConversationHistory(BaseModel):
-    """Complete conversation history model."""
+    # Complete conversation history model.
     conversation_id: str
     messages: List[Message]
     created_at: datetime

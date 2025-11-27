@@ -2,13 +2,14 @@ import React, { useState, useRef } from 'react';
 import { Send } from 'lucide-react';
 
 const MessageInput = ({ onSendMessage, disabled }) => {
-  // Keep track of what they're typing
+
   const [message, setMessage] = useState('');
   const inputRef = useRef(null);
 
   const handleSubmit = (e) => {
+
     e.preventDefault();
-    // Send their message if it's not empty and we're not disabled
+
     if (message.trim() && !disabled) {
       onSendMessage(message);
       setMessage('');
@@ -16,7 +17,7 @@ const MessageInput = ({ onSendMessage, disabled }) => {
   };
 
   const handleKeyPress = (e) => {
-    // Send on Enter, but let them use Shift+Enter for new lines
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);

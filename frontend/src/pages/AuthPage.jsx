@@ -6,6 +6,7 @@ import LoginForm from '../components/LoginForm';
 import SignupForm from '../components/SignupForm';
 
 const AuthPage = () => {
+
   const [isLogin, setIsLogin] = useState(true);
   const { isAuthenticated } = useAuth();
 

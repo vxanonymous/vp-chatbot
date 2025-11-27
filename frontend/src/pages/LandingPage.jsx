@@ -4,10 +4,12 @@ import { MapPin, Calendar, DollarSign, Users, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const LandingPage = () => {
+
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
   const handleGetStarted = () => {
+
     navigate(isAuthenticated ? '/chat' : '/auth');
   };
 

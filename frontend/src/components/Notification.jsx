@@ -1,18 +1,19 @@
 import React from 'react';
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
 const Notification = ({ notifications = [], onDismiss }) => {
-  // Make sure we have valid notifications to work with
-  if (!notifications || !Array.isArray(notifications)) {
+
+  if (typeof window === 'undefined' || !notifications || !Array.isArray(notifications) || notifications.length === 0) {
     return null;
   }
 
-  // Sort notifications by where they should appear
   const globalNotifications = notifications.filter(n => n.position === 'top-right');
   const inlineNotifications = notifications.filter(n => n.position === 'inline');
   const formNotifications = notifications.filter(n => n.position === 'form');
 
   const getIcon = (type) => {
+
     switch (type) {
       case 'success':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
@@ -26,6 +27,7 @@ const Notification = ({ notifications = [], onDismiss }) => {
   };
 
   const getNotificationClasses = (type, position) => {
+
     const baseClasses = "flex items-center justify-between px-4 py-3 rounded-lg shadow-lg min-w-[280px] max-w-xs border transition-all duration-300";
     
     switch (type) {
@@ -43,7 +45,7 @@ const Notification = ({ notifications = [], onDismiss }) => {
   const renderNotification = (notification) => (
     <div
       key={notification?.id || Math.random()}
-      className={getNotificationClasses(notification?.type, notification?.position)}
+      className={`${getNotificationClasses(notification?.type, notification?.position)} pointer-events-auto`}
     >
       <div className="flex items-center flex-1 mr-3">
         {getIcon(notification?.type)}
@@ -61,29 +63,29 @@ const Notification = ({ notifications = [], onDismiss }) => {
     </div>
   );
 
-  return (
-    <>
-      {/* Global notifications (top-right) */}
+  const portalTarget = document.body;
+
+  return createPortal(
+    <div className="pointer-events-none">
       {globalNotifications.length > 0 && (
         <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 items-end">
           {globalNotifications.map(renderNotification)}
         </div>
       )}
 
-      {/* Inline notifications (within content) */}
       {inlineNotifications.length > 0 && (
-        <div className="flex flex-col gap-2 mb-4">
+        <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 items-end" style={{ marginTop: `${globalNotifications.length * 60}px` }}>
           {inlineNotifications.map(renderNotification)}
         </div>
       )}
 
-      {/* Form notifications (within forms) */}
       {formNotifications.length > 0 && (
-        <div className="flex flex-col gap-2 mb-4">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex flex-col gap-2 items-center max-w-lg w-full px-4">
           {formNotifications.map(renderNotification)}
         </div>
       )}
-    </>
+    </div>,
+    portalTarget
   );
 };
 

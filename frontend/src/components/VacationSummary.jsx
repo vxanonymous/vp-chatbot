@@ -1,12 +1,13 @@
 import React from 'react';
 
-const VacationSummary = ({ summary }) => {
-  // Don't show anything if we don't have a summary to show
+const VacationSummary = ({ summary, showMap = false }) => {
   if (!summary) return null;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Your Vacation Plan</h3>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Your Vacation Plan</h3>
+      </div>
       
       {summary.destination && (
         <div className="mb-4">
@@ -22,10 +23,19 @@ const VacationSummary = ({ summary }) => {
         </div>
       )}
       
-      {summary.budget_range && (
+      {(summary.budget_amount || summary.budget_range) && (
         <div className="mb-4">
           <h4 className="font-medium text-gray-700 dark:text-gray-300">Budget</h4>
-          <p className="capitalize text-gray-900 dark:text-gray-100">{summary.budget_range}</p>
+          <p className="text-gray-900 dark:text-gray-100 font-semibold">
+            {summary.budget_amount || (typeof summary.budget_range === 'string'
+              ? summary.budget_range.charAt(0).toUpperCase() + summary.budget_range.slice(1)
+              : summary.budget_range)}
+          </p>
+          {summary.budget_amount && summary.budget_range && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+              {summary.budget_range} range
+            </p>
+          )}
         </div>
       )}
       
